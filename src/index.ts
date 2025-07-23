@@ -1,7 +1,7 @@
 import client from './client';
 import app from './server/app';
 import http from 'http';
-import { config } from './config';
+// import { config } from './config';
 
 async function main() {
   try {

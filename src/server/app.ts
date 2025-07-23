@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import routes from './routes';
-import { config } from './config';
+// import routes from './routes';
+// import { config } from './config';
 
 const app = express();
 

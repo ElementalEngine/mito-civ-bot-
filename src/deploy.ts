@@ -2,7 +2,7 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
-import { config } from './config';
+// import { config } from './config';
 
 // Collect all slash command JSON payloads
 const commands: any[] = [];
