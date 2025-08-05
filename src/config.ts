@@ -26,7 +26,7 @@ const discord = {
   },
   roles: {
     moderator: process.env.ROLE_MODERATOR!,
-    develper: process.env.ROLE_DEVELOPER!,
+    developer: process.env.ROLE_DEVELOPER!,
     civ6Rank: process.env.ROLE_CIV6!,
     civ7Rank: process.env.ROLE_CIV7!,
   },
@@ -50,4 +50,8 @@ export const config = {
   port: Number(process.env.PORT!),
   trueskill,
   mongoDb: process.env.MONGODB_URI!,
+  backend: {
+    /** Python-reporting API */
+    url: process.env.BACKEND_URL || 'http://localhost:8000'
+  }
 }
