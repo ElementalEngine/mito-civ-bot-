@@ -1,22 +1,48 @@
 {
   "name": "mito-civ-discord-bot",
   "version": "1.0.0",
-  "description": "Discord bot with Express backend",
+  "description": "Bot for Civilization VI Discord Community «CivCPL». Developed in TypeScript using MongoDB, Express, Discord API, Steam Web API.",
+  "keywords": [
+    "Discord",
+    "Bot",
+    "Express",
+    "TypeScript"
+  ],
+  "homepage": "https://github.com/ElementalEngine/mito-civ-discord-bot#readme",
+  "bugs": {
+    "url": "https://github.com/ElementalEngine/mito-civ-discord-bot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ElementalEngine/mito-civ-discord-bot.git"
+  },
+  "license": "Apache-2.0",
+  "author": "ProjectCisco",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=24.4.1"
   },
   "scripts": {
+    "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "ts-node --esm src/index.ts",
+    "dev:watch": "nodemon",
+    "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "test": "jest",
-
-    "live": "nodemon"
+    "test": "jest"
   },
   "ts-node-dev": {
     "watch": ["src"],
     "ext": "ts,json",
-    "ignore": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+    "ignore": [
+      "src/**/*.spec.ts",
+      "src/**/*.test.ts"
+    ]
+  },
+  "nodemonConfig": {
+    "exec": "ts-node --esm src/index.ts",
+    "watch": ["src"],
+    "ext": "ts,json",
+    "ignore": ["dist", "node_modules"]
   },
   "dependencies": {
     "discord.js": "^14.11.0",
@@ -35,6 +61,7 @@
     "typescript": "^5.1.3",
     "ts-node-dev": "^2.0.0",
     "ts-node": "^10.9.1",
+    "nodemon": "^3.1.10",
     "@types/node": "^20.2.5",
     "@types/express": "^4.17.17",
     "@types/cors": "^2.8.17",
@@ -46,5 +73,12 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "@types/jest": "^29.5.3"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "arrowParens": "always",
+    "endOfLine": "auto"
   }
 }
