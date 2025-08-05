@@ -1,54 +1,49 @@
-import { Client, Collection, GatewayIntentBits, Events } from 'discord.js';
-import fs from 'fs';
+import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
+import { readdir } from 'fs/promises';
 import path from 'path';
-import { deployCommands } from './deploy';
-// import type { Command } from './types/discord';
+import type { Command } from './types/global';
+
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    // add any additional intents here e.g., MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMembers,
   ],
-  // partials: ['MESSAGE', 'CHANNEL', 'REACTION'], // enable if needed
 });
 
-// Attach a collection for commands
 client.commands = new Collection<string, Command>();
 
-// Dynamically load command modules using type-safe import()
+// Load commands dynamically
 (async () => {
-  const commandsRoot = path.resolve(__dirname, './commands');
-  for (const dirent of fs.readdirSync(commandsRoot, { withFileTypes: true })) {
-    const dirPath = path.join(commandsRoot, dirent.name);
+  const commandsPath = path.join(__dirname, '../commands');
+  for (const dirent of await readdir(commandsPath, { withFileTypes: true })) {
     if (!dirent.isDirectory()) continue;
-    const files = fs.readdirSync(dirPath).filter(file => /\.(ts|js)$/.test(file));
-    for (const file of files) {
-      const mod = await import(path.join(dirPath, file)) as { data: Command['data']; execute: Command['execute'] };
-      if (mod.data?.name && typeof mod.execute === 'function') {
-        client.commands.set(mod.data.name, { data: mod.data, execute: mod.execute });
-      }
+    const subdir = path.join(commandsPath, dirent.name);
+    for (const file of await readdir(subdir)) {
+      if (!file.endsWith('.ts') && !file.endsWith('.js')) continue;
+      const { data, execute } = await import(path.join(subdir, file));
+      client.commands.set(data.name, { data, execute });
     }
   }
 })();
 
-// Event: ready
-client.once(Events.ClientReady, async c => {
-  console.log(`Ready! Logged in as ${c.user.tag}`);
-  await deployCommands();
-});
-
-// Event: interactionCreate
-client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-  try {
-    await command.execute(interaction);
-  } catch (err) {
-    console.error(`Error in command ${interaction.commandName}`, err);
-    await interaction.reply({ content: 'There was an error executing that command.', ephemeral: true });
+// Load events dynamically
+(async () => {
+  const eventsPath = path.join(__dirname, 'events');
+  for (const file of await readdir(eventsPath)) {
+    if (!file.endsWith('.ts') && !file.endsWith('.js')) continue;
+    const { name, once, execute } = await import(path.join(eventsPath, file));
+    if (once) client.once(name, execute);
+    else client.on(name, execute);
   }
+})();
+
+// Log ready
+client.once(Events.ClientReady, () => {
+  console.log(`🟢 Logged in as ${client.user?.tag}`);
 });
 
 export default client;
