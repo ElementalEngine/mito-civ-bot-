@@ -50,7 +50,7 @@ export const config = {
   host: process.env.HOST!,
   port: Number(process.env.PORT!),
   trueskill,
-  mongoDb: process.env.MONGODB_URI!,
+  mongoDb: process.env.MONGODB_URL!,
   backend: {
     /** Python-reporting API */
     url: process.env.BACKEND_URL || 'http://localhost:8000',

@@ -19,8 +19,8 @@ export async function deployCommands(
       ),
       { body: payload }
     );
-    console.log('✅ Commands deployed successfully');
+    console.log('✅ Commands deployed to server successfully');
   } catch (error) {
-    console.error('❌ Failed to deploy commands:', error);
+    console.error('❌ Failed to deploy commands to server:', error);
   }
 }

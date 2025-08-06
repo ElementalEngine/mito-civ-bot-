@@ -2,9 +2,13 @@ import client from './client';
 import app from './server/app';
 import http from 'http';
 import { config } from './config';
+import { initializeDatabase } from './database';
 
 async function main() {
   try {
+
+    await initializeDatabase ();
+
     await client.login(config.discord.token);
 
     const server = http.createServer(app);
