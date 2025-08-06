@@ -1,10 +1,10 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { validateSaveAttachment } from '../../utils/validate-save';
-import { submitSaveForReport } from '../../services/game-report-service';
+import { submitSaveForReport } from '../../services/reporting/game-report-service';
 import { config } from '../../config';
 
 export const data = new SlashCommandBuilder()
-  .setName('game-report')
+  .setName('report-game')
   .setDescription('Upload a Civ6 or Civ7 save file for reporting')
   .addStringOption(option =>
     option
