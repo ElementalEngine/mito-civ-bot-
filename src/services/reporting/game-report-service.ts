@@ -1,7 +1,7 @@
 import axios from 'axios';
 import FormData from 'form-data';
-import { fetchSaveFile } from '../utils/fetch-save-file';
-import { config } from '../config';
+import { fetchSaveFile } from '../../utils/fetch-save-file';
+import { config } from '../../config';
 
 interface ReportResult {
   reportLink?: string;

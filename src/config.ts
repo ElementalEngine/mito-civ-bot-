@@ -4,8 +4,9 @@ import path from 'path'
 
 export * from './config/constants'
 
+const nodeEnv = process.env.NODE_ENV ?? 'development'
 env({
-  path: path.resolve('./.env'),
+  path: path.resolve(`.env.${nodeEnv}`),
 })
 
 const cors: CorsOptions = {
@@ -52,6 +53,11 @@ export const config = {
   mongoDb: process.env.MONGODB_URI!,
   backend: {
     /** Python-reporting API */
-    url: process.env.BACKEND_URL || 'http://localhost:8000'
-  }
+    url: process.env.BACKEND_URL || 'http://localhost:8000',
+  },
+  env: (process.env.NODE_ENV as 'development' | 'production') ?? 'development',
+  rateLimit: {
+    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+    max: Number(process.env.RATE_LIMIT_MAX) || 100,
+  },
 }
