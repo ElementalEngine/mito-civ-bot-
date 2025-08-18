@@ -11,7 +11,7 @@ export function validateSaveAttachment(
   // Maximum allowed size (10 MB)
   const MAX_SAVE_SIZE = 10 * 1024 * 1024;
   if (attachment.size > MAX_SAVE_SIZE) {
-    throw new Error('Your save file is too large. Please upload a file under 10 MB.');
+    throw new Error('Your save file is too large. Please upload a file under 10MB.');
   }
 
   // Expected extension
