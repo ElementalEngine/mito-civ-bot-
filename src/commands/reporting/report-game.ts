@@ -2,42 +2,42 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   MessageFlags,
-} from 'discord.js';
-import { config } from '../../config';
-import { validateSaveAttachment } from '../../utils/validate-save-attachment';
-import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from '../../config/constants';
+} from "discord.js";
+import { config } from "../../config";
+import { validateSaveAttachment } from "../../utils/validate-save-attachment";
+import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from "../../config/constants";
+import { submitSaveForReport } from "../../services/reporting.service";
 
-type GameMode = 'realtime' | 'cloud';
+type GameMode = "realtime" | "cloud";
 
 export const data = new SlashCommandBuilder()
-  .setName('report-game')
-  .setDescription('Validate the channel and Civ save file (size + extension).')
-  .addStringOption(o =>
-    o.setName('game-mode')
-      .setDescription('Real-time or Cloud')
+  .setName("report-game")
+  .setDescription("Validate the channel & save, then upload to the reporter backend.")
+  .addStringOption(option =>
+    option.setName("game-mode")
+      .setDescription("Real-time or Cloud")
       .addChoices(
-        { name: 'Real-time', value: 'realtime' },
-        { name: 'Cloud', value: 'cloud' },
+        { name: "Real-time", value: "realtime" },
+        { name: "Cloud", value: "cloud" },
       )
       .setRequired(true),
   )
-  .addStringOption(o =>
-    o.setName('game-edition')
-      .setDescription('Which Civilization edition')
+  .addStringOption(option =>
+    option.setName("game-edition")
+      .setDescription("Which Civilization edition")
       .addChoices(
-        { name: 'Civilization VI (.Civ6Save)', value: 'CIV6' },
-        { name: 'Civilization VII (.Civ7Save)', value: 'CIV7' },
+        { name: "Civilization VI (.Civ6Save)", value: "CIV6" },
+        { name: "Civilization VII (.Civ7Save)", value: "CIV7" },
       )
       .setRequired(true),
   )
-  .addAttachmentOption(o =>
-    o.setName('game-save')
-      .setDescription('Upload the .Civ6Save or .Civ7Save file (≤7MB)')
+  .addAttachmentOption(option =>
+    option.setName("game-save")
+      .setDescription("Upload the .Civ6Save or .Civ7Save file (≤7MB)")
       .setRequired(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  // Fast command: do NOT defer.
   if (!interaction.inGuild()) {
     await interaction.reply({
       content: `${EMOJI_FAIL} This command must be used in a server.`,
@@ -46,40 +46,58 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const mode = interaction.options.getString('game-mode', true) as GameMode;
-  const edition = interaction.options.getString('game-edition', true) as CivEdition;
-  const save = interaction.options.getAttachment('game-save', true);
+  const mode = interaction.options.getString("game-mode", true) as GameMode;
+  const edition = interaction.options.getString("game-edition", true) as CivEdition;
+  const save = interaction.options.getAttachment("game-save", true);
 
   const realtimeChannelId = config.discord.channels.realtimeUploads;
   const cloudChannelId = config.discord.channels.cloudUploads;
-  const expectedChannelId = mode === 'realtime' ? realtimeChannelId : cloudChannelId;
+  const expectedChannelId = mode === "realtime" ? realtimeChannelId : cloudChannelId;
 
   const errors: string[] = [];
 
   if (!expectedChannelId) {
     errors.push(
-      mode === 'realtime'
-        ? 'Real-time uploads channel is not configured.'
-        : 'Cloud uploads channel is not configured.',
+      mode === "realtime"
+        ? "Real-time uploads channel is not configured."
+        : "Cloud uploads channel is not configured.",
     );
   } else if (interaction.channelId !== expectedChannelId) {
     errors.push(
-      mode === 'realtime'
-        ? 'Wrong channel for **Real-time**. Use the designated Real-time uploads channel.'
-        : 'Wrong channel for **Cloud**. Use the designated Cloud uploads channel.',
+      mode === "realtime"
+        ? "Wrong channel for **Real-time**. Use the designated Real-time uploads channel."
+        : "Wrong channel for **Cloud**. Use the designated Cloud uploads channel.",
     );
   }
 
   try {
     validateSaveAttachment(save, edition);
   } catch (e: any) {
-    errors.push(e?.message || 'Invalid save attachment.');
+    errors.push(e?.message || "Invalid save attachment.");
   }
 
-  const content =
-    errors.length === 0
-      ? `${EMOJI_CONFIRM} PASS`
-      : `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join('\n')}`;
+  if (errors.length) {
+    await interaction.reply({
+      content: `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join("\n")}`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-  await interaction.reply({ content, flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const res = await submitSaveForReport(
+      save.url,
+      save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
+    );
+
+    await interaction.editReply(
+      `${EMOJI_CONFIRM} Parsed match **${res.matchId}** (${res.parsed.edition}).\n` +
+      `Players: ${res.players.map(p => `\`${p.name}\``).join(", ")}`
+    );
+  } catch (err: any) {
+    const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
+    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+  }
 }

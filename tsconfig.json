@@ -2,7 +2,8 @@
   "compilerOptions": {
     "allowJs": true,                               
     "target": "ES2022",                          
-    "module": "commonjs",                        
+    "module": "commonjs",
+    "lib": ["ES2022", "DOM"],                        
     "moduleResolution": "node",                  
     "allowSyntheticDefaultImports": true,          
     "esModuleInterop": true,                       
