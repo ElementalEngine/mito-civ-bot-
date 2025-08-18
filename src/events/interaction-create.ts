@@ -1,37 +1,46 @@
-import { Events, Interaction, ChatInputCommandInteraction, InteractionReplyOptions } from 'discord.js';
-import type { Collection } from '@discordjs/collection';
-
-type BotClientWithCommands = import('discord.js').Client & { commands: Collection<string, any> };
-type NewInteraction = ChatInputCommandInteraction & { client: BotClientWithCommands };
+import {
+  Events,
+  Interaction,
+  ChatInputCommandInteraction,
+  InteractionReplyOptions,
+  MessageFlags,
+} from 'discord.js';
+import type { Collection } from 'discord.js';
+import type { Command } from '../types/global';
 
 export const name = Events.InteractionCreate;
 export const once = false;
 
-export async function execute(interaction: Interaction): Promise<void> {
+type NewInteraction = Interaction & {
+  client: Interaction['client'] & { commands: Collection<string, Command> };
+};
+
+export async function execute(interaction: NewInteraction): Promise<void> {
   if (!interaction.isChatInputCommand()) return;
-  const cmdInteraction = interaction as NewInteraction;
 
-  // Acknowledge to avoid 3s timeout
-  await cmdInteraction.deferReply({ ephemeral: true });
-
-  const command = cmdInteraction.client.commands.get(cmdInteraction.commandName);
+  const i = interaction as ChatInputCommandInteraction;
+  const command = i.client.commands.get(i.commandName);
   if (!command) {
-    console.warn(`No matching command for: ${cmdInteraction.commandName}`);
+    await i.reply({ content: '❌ Command not found.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   try {
-    await command.execute(cmdInteraction);
-  } catch (error) {
-    console.error(`Error executing ${cmdInteraction.commandName}:`, error);
-    const replyOptions: InteractionReplyOptions = {
+    await command.execute(i);
+  } catch (err) {
+    const fail: InteractionReplyOptions = {
       content: '❌ An unexpected error occurred.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral, 
     };
-    if (cmdInteraction.replied || cmdInteraction.deferred) {
-      await cmdInteraction.followUp(replyOptions);
+
+    if (i.deferred) {
+      await i.editReply({ content: fail.content });
+    } else if (i.replied) {
+      await i.followUp(fail); 
     } else {
-      await cmdInteraction.reply(replyOptions);
+      await i.reply(fail);   
     }
+
+    console.error(`/${i.commandName} error:`, err);
   }
 }
