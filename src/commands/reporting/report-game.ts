@@ -103,6 +103,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       reply_str += `Game: ${res.game} | Turn: ${res.turn} | Age: ${res.age} | Map: ${res.map_type} | Mode: ${res.game_mode}\n`;
       reply_str += `${player_list}`;
     }
+    await interaction.editReply('Save parsed successfully!');
     await interaction.channel?.send({content: reply_str});
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
