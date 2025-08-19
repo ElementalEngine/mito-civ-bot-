@@ -1,4 +1,4 @@
-import type { UploadSaveResponse } from "../api";
+import type { UploadSaveResponse, OrderChangeResponse } from "../api";
 import { ApiClient } from "../api";
 import { downloadAttachment } from "../utils/download-attachment";
 
@@ -12,8 +12,15 @@ export async function submitSaveForReport(
   return api.uploadSave(buf, filename);
 }
 
+export async function setPlacements(
+  matchId: string,
+  newOrder: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<OrderChangeResponse> {
+  return api.changeOrder(matchId, newOrder);
+}
+
 // Future (add here when ready):
-// export async function setPlacements(...) { ... }
 // export async function confirmMatch(...) { ... }
 // export async function flagMatch(...) { ... }
 // export async function approveEligible(...) { ... }
