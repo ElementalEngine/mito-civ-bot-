@@ -93,8 +93,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     await interaction.editReply(
-      `${EMOJI_CONFIRM} Parsed match **${res.matchId}** (${res.parsed.edition}).\n` +
-      `Players: ${res.players.map(p => `\`${p.name}\``).join(", ")}`
+      `${EMOJI_CONFIRM} Parsed match **${res.match_id}**.\n` +
+      `Players: ${res.players.map(p => `\`${p.user_name}\``).join(", ")}`
     );
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");

@@ -1,3 +1,4 @@
+import { log } from "console";
 import { config } from "../config";
 import { ApiError } from "./errors";
 import type { UploadSaveResponse } from "./types";
@@ -18,7 +19,7 @@ export class ApiClient {
     // TS typing-safe for Node: wrap Buffer in Uint8Array for File/Blob
     form.append("file", new File([new Uint8Array(fileBuf)], filename));
 
-    const res = await this.fetchWithRetry(`${this.base}/api/v1/uploads/save`, {
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/upload-game-report/`, {
       method: "POST",
       body: form,
     });
