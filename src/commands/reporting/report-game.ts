@@ -93,18 +93,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
     );
-    var reply_str = `${EMOJI_CONFIRM} Parsed match **${res.match_id}**. Reported by ${interaction.user} ${interaction.user.id}\n\n`;
-    if (edition === "CIV6") {
-      var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ6_leaders_dict[p.civ]} `).join("\n");
-      reply_str += `Game: ${res.game} | Turn: ${res.turn} | Map: ${res.map_type} | Mode: ${res.game_mode}\n\n`;
-      reply_str += `${player_list}`;
+    if (res.repeated === true) {
+      await interaction.editReply('Match already reported! match ID: ' + res.match_id);
     } else {
-      var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ7_civs_dict[p.civ]} ${civ7_leaders_dict[p.leader]}`).join("\n");
-      reply_str += `Game: ${res.game} | Turn: ${res.turn} | Age: ${res.age} | Map: ${res.map_type} | Mode: ${res.game_mode}\n`;
-      reply_str += `${player_list}`;
+      var reply_str = `${EMOJI_CONFIRM} Match reported by ${interaction.user} ${interaction.user.id}\nMatch ID: **${res.match_id}**\n`;
+      if (edition === "CIV6") {
+        var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ6_leaders_dict[p.civ]} `).join("\n");
+        reply_str += `Game: ${res.game} | Turn: ${res.turn} | Map: ${res.map_type} | Mode: ${res.game_mode}\n\n`;
+        reply_str += `${player_list}`;
+      } else {
+        var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ7_civs_dict[p.civ]} ${civ7_leaders_dict[p.leader]}`).join("\n");
+        reply_str += `Game: ${res.game} | Turn: ${res.turn} | Age: ${res.age} | Map: ${res.map_type} | Mode: ${res.game_mode}\n`;
+        reply_str += `${player_list}`;
+      }
+      await interaction.editReply('Save parsed successfully!');
+      await interaction.channel?.send({content: reply_str});
     }
-    await interaction.editReply('Save parsed successfully!');
-    await interaction.channel?.send({content: reply_str});
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);

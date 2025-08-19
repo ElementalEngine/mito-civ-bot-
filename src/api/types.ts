@@ -30,4 +30,5 @@ export type UploadSaveResponse = {
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
+  repeated: boolean;
 };
