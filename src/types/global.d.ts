@@ -1,12 +1,17 @@
-import type { SlashCommandBuilder, ChatInputCommandInteraction, Collection } from 'discord.js';
-
+import type {
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+  Collection,
+  Awaitable,
+} from "discord.js";
 export interface Command {
   data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  execute: (interaction: ChatInputCommandInteraction) => Awaitable<void>;
 }
-
-declare module 'discord.js' {
+declare module "discord.js" {
   interface Client {
     commands: Collection<string, Command>;
   }
 }
+
+export {};

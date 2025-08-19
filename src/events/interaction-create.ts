@@ -1,46 +1,48 @@
-import {
-  Events,
-  Interaction,
-  ChatInputCommandInteraction,
-  InteractionReplyOptions,
-  MessageFlags,
-} from 'discord.js';
-import type { Collection } from 'discord.js';
-import type { Command } from '../types/global';
+import { Collection, Events, Interaction, MessageFlags } from "discord.js";
+import type { Command } from "../types/global";
 
 export const name = Events.InteractionCreate;
 export const once = false;
 
-type NewInteraction = Interaction & {
-  client: Interaction['client'] & { commands: Collection<string, Command> };
-};
+type WithCommands = Interaction["client"] & { commands: Collection<string, Command> };
+type NewInteraction = Interaction & { client: WithCommands };
 
-export async function execute(interaction: NewInteraction): Promise<void> {
+export const execute = async (interaction: NewInteraction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const i = interaction as ChatInputCommandInteraction;
-  const command = i.client.commands.get(i.commandName);
+  const command = interaction.client.commands.get(interaction.commandName);
   if (!command) {
-    await i.reply({ content: '❌ Command not found.', flags: MessageFlags.Ephemeral });
+    await interaction.reply({
+      content: "❌ Command not found.",
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
   try {
-    await command.execute(i);
-  } catch (err) {
-    const fail: InteractionReplyOptions = {
-      content: '❌ An unexpected error occurred.',
-      flags: MessageFlags.Ephemeral, 
-    };
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(`/${interaction.commandName} error:`, error);
 
-    if (i.deferred) {
-      await i.editReply({ content: fail.content });
-    } else if (i.replied) {
-      await i.followUp(fail); 
-    } else {
-      await i.reply(fail);   
+    const replyOpts = {
+      content: "❌ There was an error while executing this command!",
+      flags: MessageFlags.Ephemeral,
+    } as const;
+    const editOpts = {
+      content: "❌ There was an error while executing this command!",
+    } as const;
+
+    try {
+      if (interaction.deferred) {
+        await interaction.editReply(editOpts);      
+      } else if (interaction.replied) {
+        await interaction.followUp(replyOpts);         
+      } else {
+        await interaction.reply(replyOpts);    
+      }
+    } catch {
+      // last-resort if state changed mid-flight
+      try { await interaction.followUp(replyOpts); } catch {}
     }
-
-    console.error(`/${i.commandName} error:`, err);
   }
-}
+};
