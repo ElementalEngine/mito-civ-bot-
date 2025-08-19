@@ -1,7 +1,7 @@
 import { log } from "console";
 import { config } from "../config";
 import { ApiError } from "./errors";
-import type { UploadSaveResponse } from "./types";
+import type { UploadSaveResponse, OrderChangeResponse } from "./types";
 
 type FetchLike = typeof fetch;
 
@@ -25,6 +25,19 @@ export class ApiClient {
     });
 
     return (await this.parseJson(res)) as UploadSaveResponse;
+  }
+
+  async changeOrder(matchId: string, newOrder: string): Promise<OrderChangeResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    form.append("new_order", newOrder);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/change-order/`, {
+      method: "POST",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as OrderChangeResponse;
   }
 
   private async fetchWithRetry(input: RequestInfo | URL, init?: RequestInit, attempts = 3): Promise<Response> {

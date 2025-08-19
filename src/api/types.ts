@@ -32,3 +32,8 @@ export type UploadSaveResponse = {
   players: ParsedPlayer[];
   repeated: boolean;
 };
+
+export type OrderChangeResponse = {
+  match_id: string;
+  players: ParsedPlayer[];
+}
