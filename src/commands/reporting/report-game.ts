@@ -7,6 +7,8 @@ import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
 import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from "../../config/constants";
 import { submitSaveForReport } from "../../services/reporting.service";
+import { civ7_civs_dict, civ7_leaders_dict } from "./civ7leaders";
+import { civ6_leaders_dict } from "./civ6leaders";
 
 type GameMode = "realtime" | "cloud";
 
@@ -91,11 +93,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
     );
-
-    await interaction.editReply(
-      `${EMOJI_CONFIRM} Parsed match **${res.match_id}**.\n` +
-      `Players: ${res.players.map(p => `\`${p.user_name}\``).join(", ")}`
-    );
+    var reply_str = `${EMOJI_CONFIRM} Parsed match **${res.match_id}**. Reported by ${interaction.user} ${interaction.user.id}\n\n`;
+    if (edition === "CIV6") {
+      var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ6_leaders_dict[p.civ]} `).join("\n");
+      reply_str += `Game: ${res.game} | Turn: ${res.turn} | Map: ${res.map_type} | Mode: ${res.game_mode}\n\n`;
+      reply_str += `${player_list}`;
+    } else {
+      var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ7_civs_dict[p.civ]} ${civ7_leaders_dict[p.leader]}`).join("\n");
+      reply_str += `Game: ${res.game} | Turn: ${res.turn} | Age: ${res.age} | Map: ${res.map_type} | Mode: ${res.game_mode}\n`;
+      reply_str += `${player_list}`;
+    }
+    await interaction.channel?.send({content: reply_str});
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
