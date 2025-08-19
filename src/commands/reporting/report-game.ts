@@ -5,12 +5,15 @@ import {
 } from "discord.js";
 import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
-import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from "../../config/constants";
+import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { submitSaveForReport } from "../../services/reporting.service";
-import { civ7_civs_dict, civ7_leaders_dict } from "./civ7leaders";
-import { civ6_leaders_dict } from "./civ6leaders";
+import { chunkByLength } from "../../utils/chunk-by-length";
 
-type GameMode = "realtime" | "cloud";
+import { lookupCiv6Leader } from "../../data/civ6-leaders";
+import { lookupCiv7Civ } from "../../data/civ7-civs";
+import { lookupCiv7Leader } from "../../data/civ7-leaders";
+
+import type { GameMode, Civ6Report, Civ7Report } from "../../types/reports";
 
 export const data = new SlashCommandBuilder()
   .setName("report-game")
@@ -48,6 +51,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
   const mode = interaction.options.getString("game-mode", true) as GameMode;
   const edition = interaction.options.getString("game-edition", true) as CivEdition;
   const save = interaction.options.getAttachment("game-save", true);
@@ -79,35 +84,49 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   if (errors.length) {
-    await interaction.reply({
+    await interaction.editReply({
       content: `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join("\n")}`,
-      flags: MessageFlags.Ephemeral,
     });
     return;
   }
-
-  await interaction.deferReply({ ephemeral: true });
 
   try {
     const res = await submitSaveForReport(
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
     );
-    if (res.repeated === true) {
-      await interaction.editReply('Match already reported! match ID: ' + res.match_id);
+
+    if (res?.repeated === true) {
+      await interaction.editReply(`Match already reported! Match ID: ${res.match_id}`);
+      return;
+    }
+
+    const header =
+      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `Match ID: **${res.match_id}**\n`;
+
+    let meta = "";
+    let body = "";
+
+    if (edition === "CIV6") {
+      const r = res as Civ6Report;
+      meta = `Game: ${r.game} | Turn: ${r.turn} | Map: ${r.map_type} | Mode: ${r.game_mode}\n\n`;
+      body = r.players
+        .map(p => `<@${p.discord_id}>\t${p.user_name}\t${lookupCiv6Leader(p.civ)}`)
+        .join("\n");
     } else {
-      var reply_str = `${EMOJI_CONFIRM} Match reported by ${interaction.user} ${interaction.user.id}\nMatch ID: **${res.match_id}**\n`;
-      if (edition === "CIV6") {
-        var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ6_leaders_dict[p.civ]} `).join("\n");
-        reply_str += `Game: ${res.game} | Turn: ${res.turn} | Map: ${res.map_type} | Mode: ${res.game_mode}\n\n`;
-        reply_str += `${player_list}`;
-      } else {
-        var player_list = res.players.map(p => `<@${p.discord_id}>\t\t${p.user_name}\t\t${civ7_civs_dict[p.civ]} ${civ7_leaders_dict[p.leader]}`).join("\n");
-        reply_str += `Game: ${res.game} | Turn: ${res.turn} | Age: ${res.age} | Map: ${res.map_type} | Mode: ${res.game_mode}\n`;
-        reply_str += `${player_list}`;
-      }
-      await interaction.editReply('Save parsed successfully!');
-      await interaction.channel?.send({content: reply_str});
+      const r = res as Civ7Report;
+      meta = `Game: ${r.game} | Turn: ${r.turn} | Age: ${r.age} | Map: ${r.map_type} | Mode: ${r.game_mode}\n\n`;
+      body = r.players
+        .map(p => `<@${p.discord_id}>\t${p.user_name}\t${lookupCiv7Civ(p.civ)} ${lookupCiv7Leader(p.leader)}`)
+        .join("\n");
+    }
+
+    await interaction.editReply("Save parsed successfully!");
+
+    const full = header + meta + body;
+    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
+      await interaction.followUp({ content: chunk }); 
     }
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
