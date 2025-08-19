@@ -1,5 +1,8 @@
 // ── Mentions 
-export const MAX_MENTIONS = 14 as const;
+export const MAX_MENTIONS = 20 as const;
+
+// Discord's max message length
+export const MAX_DISCORD_LEN = 1999
 
 // ── Emojis 
 export const EMOJI_YES           = '👍';
