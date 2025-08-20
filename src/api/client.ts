@@ -1,7 +1,8 @@
 import { log } from "console";
 import { config } from "../config";
 import { ApiError } from "./errors";
-import type { UploadSaveResponse, OrderChangeResponse } from "./types";
+import type { UploadSaveResponse, OrderChangeResponse, GetMatchResponse } from "./types";
+import { match } from "assert";
 
 type FetchLike = typeof fetch;
 
@@ -14,10 +15,11 @@ export class ApiClient {
     this.fetcher = fetcher;
   }
 
-  async uploadSave(fileBuf: Buffer, filename: string): Promise<UploadSaveResponse> {
+  async uploadSave(fileBuf: Buffer, filename: string, reporterDiscordId: string): Promise<UploadSaveResponse> {
     const form = new FormData();
     // TS typing-safe for Node: wrap Buffer in Uint8Array for File/Blob
     form.append("file", new File([new Uint8Array(fileBuf)], filename));
+    form.append("reporter_discord_id", reporterDiscordId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/upload-game-report/`, {
       method: "POST",
@@ -38,6 +40,18 @@ export class ApiClient {
     });
 
     return (await this.parseJson(res)) as OrderChangeResponse;
+  }
+
+  async getMatch(matchId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/get-match/`, {
+      method: "PUT",
+      body: form
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
   }
 
   private async fetchWithRetry(input: RequestInfo | URL, init?: RequestInit, attempts = 3): Promise<Response> {

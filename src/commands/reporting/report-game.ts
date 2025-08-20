@@ -91,6 +91,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res = await submitSaveForReport(
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
+      interaction.user.id
     );
 
     if (res?.repeated === true) {

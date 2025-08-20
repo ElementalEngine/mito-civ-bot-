@@ -31,6 +31,7 @@ export type UploadSaveResponse = {
   flagged_by: string | null;
   players: ParsedPlayer[];
   repeated: boolean;
+  reporter_discord_id: string;
 };
 
 export type OrderChangeResponse = {
@@ -47,4 +48,22 @@ export type OrderChangeResponse = {
   flagged_by: string | null;
   players: ParsedPlayer[];
   repeated: boolean;
+  reporter_discord_id: string;
+}
+
+export type GetMatchResponse = {
+  match_id: string;
+  game: string;
+  turn: number;
+  age: string;
+  map_type: string;
+  game_mode: string;
+  parser_version: string;
+  created_at: string;
+  confirmed: boolean;
+  flagged: boolean;
+  flagged_by: string | null;
+  players: ParsedPlayer[];
+  repeated: boolean;
+  reporter_discord_id: string;
 }

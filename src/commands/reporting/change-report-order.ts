@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { setPlacements } from "../../services/reporting.service";
+import { setPlacements, getMatch } from "../../services/reporting.service";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
@@ -50,6 +50,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
   try {
+    const getMatchRes = await getMatch(matchId);
+    if (getMatchRes?.reporter_discord_id != interaction.user.id) {
+      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
+      return;
+    }
     const res = await setPlacements(matchId, newOrder);
     const header =
       `${EMOJI_CONFIRM} Match order changed by <@${interaction.user.id}> (${interaction.user.id})\n` +
