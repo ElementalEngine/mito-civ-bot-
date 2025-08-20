@@ -50,10 +50,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const getMatchRes = await getMatch(matchId);
-    if (getMatchRes?.reporter_discord_id != interaction.user.id) {
-      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
-      return;
+    if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
+      const getMatchRes = await getMatch(matchId);
+      if (getMatchRes?.reporter_discord_id != interaction.user.id) {
+        await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
+        return;
+      }
     }
     const res = await setPlacements(matchId, newOrder);
     const header =
