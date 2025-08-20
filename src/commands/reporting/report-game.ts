@@ -8,12 +8,9 @@ import { validateSaveAttachment } from "../../utils/validate-save-attachment";
 import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { submitSaveForReport } from "../../services/reporting.service";
 import { chunkByLength } from "../../utils/chunk-by-length";
+import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
-import { lookupCiv6Leader } from "../../data/civ6-leaders";
-import { lookupCiv7Civ } from "../../data/civ7-civs";
-import { lookupCiv7Leader } from "../../data/civ7-leaders";
-
-import type { GameMode, Civ6Report, Civ7Report } from "../../types/reports";
+import type { GameMode, BaseReport } from "../../types/reports";
 
 export const data = new SlashCommandBuilder()
   .setName("report-game")
@@ -105,26 +102,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
-    let meta = "";
-    let body = "";
-
-    if (edition === "CIV6") {
-      const r = res as Civ6Report;
-      meta = `Game: ${r.game} | Turn: ${r.turn} | Map: ${r.map_type} | Mode: ${r.game_mode}\n\n`;
-      body = r.players
-        .map(p => `<@${p.discord_id}>\t${p.user_name}\t${lookupCiv6Leader(p.civ)}`)
-        .join("\n");
-    } else {
-      const r = res as Civ7Report;
-      meta = `Game: ${r.game} | Turn: ${r.turn} | Age: ${r.age} | Map: ${r.map_type} | Mode: ${r.game_mode}\n\n`;
-      body = r.players
-        .map(p => `<@${p.discord_id}>\t${p.user_name}\t${lookupCiv7Civ(p.civ)} ${lookupCiv7Leader(p.leader)}`)
-        .join("\n");
-    }
-
     await interaction.editReply("Save parsed successfully!");
 
-    const full = header + meta + body;
+    const full = header + convertMatchToStr(res as BaseReport);
     for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
       await interaction.followUp({ content: chunk }); 
     }

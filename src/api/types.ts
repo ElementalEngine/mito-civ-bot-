@@ -35,5 +35,16 @@ export type UploadSaveResponse = {
 
 export type OrderChangeResponse = {
   match_id: string;
+  game: string;
+  turn: number;
+  age: string;
+  map_type: string;
+  game_mode: string;
+  parser_version: string;
+  created_at: string;
+  confirmed: boolean;
+  flagged: boolean;
+  flagged_by: string | null;
   players: ParsedPlayer[];
+  repeated: boolean;
 }

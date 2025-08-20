@@ -33,7 +33,7 @@ export class ApiClient {
     form.append("new_order", newOrder);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/change-order/`, {
-      method: "POST",
+      method: "PUT",
       body: form,
     });
 

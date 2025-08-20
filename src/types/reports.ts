@@ -7,26 +7,27 @@ export type BaseReport = {
   turn: number;
   map_type: string;
   game_mode: string;
+  players: BasePlayer[];
 };
 
-export type Civ6Player = {
+export type BasePlayer = {
   discord_id: string;
   user_name: string;
+  placement: number;
+};
+
+export type Civ6Player = BasePlayer & {
   civ: string; // key into CIV6_LEADERS
 };
 
-export type Civ7Player = {
-  discord_id: string;
-  user_name: string;
+export type Civ7Player = BasePlayer & {
   civ: string;    // key into CIV7_CIVS
   leader: string; // key into CIV7_LEADERS
 };
 
 export type Civ6Report = BaseReport & {
-  players: Civ6Player[];
 };
 
 export type Civ7Report = BaseReport & {
-  players: Civ7Player[];
   age: string | number;
 };
