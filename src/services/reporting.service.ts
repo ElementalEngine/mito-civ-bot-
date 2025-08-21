@@ -35,6 +35,14 @@ export async function deletePendingMatch(
   return api.deletePendingMatch(matchId);
 }
 
+export async function triggerQuit(
+  matchId: string,
+  quitterDiscordId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<GetMatchResponse> {
+  return api.triggerQuit(matchId, quitterDiscordId);
+}
+
 // Future (add here when ready):
 // export async function confirmMatch(...) { ... }
 // export async function flagMatch(...) { ... }

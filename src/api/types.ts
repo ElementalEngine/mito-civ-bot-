@@ -9,6 +9,7 @@ export type ParsedPlayer = {
   civ: string;
   leader?: string;
   placement: number;
+  quit: boolean;
 };
 
 export type ParsedSave = {

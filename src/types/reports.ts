@@ -14,6 +14,7 @@ export type BasePlayer = {
   discord_id: string;
   user_name: string;
   placement: number;
+  quit: boolean;
 };
 
 export type Civ6Player = BasePlayer & {

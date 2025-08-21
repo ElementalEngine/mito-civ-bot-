@@ -66,6 +66,19 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
+  async triggerQuit(matchId: string, quitterDiscordId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    form.append("quitter_discord_id", quitterDiscordId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/trigger-quit/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
   private async fetchWithRetry(input: RequestInfo | URL, init?: RequestInit, attempts = 3): Promise<Response> {
     let lastErr: unknown;
     for (let i = 0; i < attempts; i++) {
