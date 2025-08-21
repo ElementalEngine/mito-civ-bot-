@@ -15,6 +15,7 @@ export type BasePlayer = {
   user_name: string;
   placement: number;
   quit: boolean;
+  sub_of: string | null;
 };
 
 export type Civ6Player = BasePlayer & {
