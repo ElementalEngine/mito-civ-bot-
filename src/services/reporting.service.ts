@@ -28,6 +28,13 @@ export async function getMatch(
   return api.getMatch(matchId);
 }
 
+export async function deletePendingMatch(
+  matchId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<GetMatchResponse> {
+  return api.deletePendingMatch(matchId);
+}
+
 // Future (add here when ready):
 // export async function confirmMatch(...) { ... }
 // export async function flagMatch(...) { ... }
