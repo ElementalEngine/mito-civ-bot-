@@ -5,12 +5,12 @@ import {
 } from "discord.js";
 import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
-import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
+import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from "../../config/constants";
 import { submitSaveForReport } from "../../services/reporting.service";
-import { chunkByLength } from "../../utils/chunk-by-length";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { buildReportEmbed } from "../../ui/layout/report.layout";
 
-import type { GameMode, BaseReport } from "../../types/reports";
+import type { GameMode } from "../../types/reports";
+import type { UploadSaveResponse } from "../../api/types";
 
 export const data = new SlashCommandBuilder()
   .setName("report-game")
@@ -88,7 +88,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   try {
-    const res = await submitSaveForReport(
+    const res: UploadSaveResponse = await submitSaveForReport(
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
       interaction.user.id
@@ -99,18 +99,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    const header =
-      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
+    await interaction.editReply(`${EMOJI_CONFIRM} Save parsed successfully!`);
 
-    await interaction.editReply("Save parsed successfully!");
+    // Build and send a SINGLE compact embed based on returned data
+    const embed = buildReportEmbed(res, {
+      reporterId: interaction.user.id,
+      // host: userMention(interaction.user.id), // prefill if desired later
+    });
 
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
+    await interaction.followUp({
+      embeds: [embed],
+      // flags: MessageFlags.Ephemeral, // enable if you prefer private review
+    });
   } catch (err: any) {
-    const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
+    const msg = err?.body
+      ? `${err.message}: ${JSON.stringify(err.body)}`
+      : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
   }
 }
