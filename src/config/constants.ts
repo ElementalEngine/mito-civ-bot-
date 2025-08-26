@@ -14,6 +14,11 @@ export const EMOJI_ERROR         = '⚠️';
 export const EMOJI_FAIL          = '‼️';
 export const EMOJI_PARTICIPANTS  = '👥';
 export const EMOJI_FULL_G_REPORT = '📜';
+export const EMOJI_QUITTER       = '🏳️';
+export const EMOJI_REPORT        = '🧾';
+export const EMOJI_FIRST_PLACE   = '🥇';
+export const EMOJI_SECOND_PLACE  = '🥈';
+export const EMOJI_THIRD_PLACE   = '🥉';
 
 // ── Civilization save rules 
 export const CIV_SAVE = {
@@ -26,3 +31,8 @@ export const CIV_SAVE = {
 
 export type CivEdition = keyof typeof CIV_SAVE.EXT; // 'CIV6' | 'CIV7'
 export const expectedExt = (edition: CivEdition) => CIV_SAVE.EXT[edition];
+
+// ── Edit-report session timeout (ms)
+export const EDIT_REPORT_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+export const MENTION_ID_REGEX = /<@!?(\d+)>/;
