@@ -166,7 +166,7 @@ function civText(isCiv6: boolean, isCiv7: boolean, p: AnyPlayer): string {
     return s || "—";
   }
   if (isCiv6) {
-    const leaderKey = (p as any).leader;
+    const leaderKey = (p as any).civ;
     const leaderName = leaderKey ? lookupCiv6Leader(leaderKey) : null;
     return leaderName || "—";
   }
