@@ -10,6 +10,8 @@ export type ParsedPlayer = {
   leader?: string;
   placement: number;
   quit: boolean;
+  delta?: number;
+  sub_of: string | null;
 };
 
 export type ParsedSave = {

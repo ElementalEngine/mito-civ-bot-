@@ -70,7 +70,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       .sort((a, b) => a.best - b.best);
 
     teams.forEach((t, idx) => {
-      const teamRank = idx + 1;
+      const teamRank = idx;
       // Team header row
       colLeft.push(rankToken(teamRank));               // 🥇 / 01: etc
       colMid.push(`**Team ${t.teamId + 1}**`);
@@ -88,7 +88,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     // FFA: medals replace 1/2/3; others numeric
     for (let i = 0; i < players.length; i++) {
       const p = players[i];
-      const pos = (placement(p) ?? i) + 1;
+      const pos = (placement(p) ?? i);
       colLeft.push(`${rankToken(pos)} ${fmtDelta(delta(p))}`);
       colMid.push(`${who(p)}${quit(p)}`);
       colRight.push(civText(isCiv6, isCiv7, p));

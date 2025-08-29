@@ -54,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res = await deletePendingMatch(matchId);
 
     const header =
-      `${EMOJI_CONFIRM} Match removed successfulyl by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `${EMOJI_CONFIRM} Match removed successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
     await interaction.editReply("Match removed successfully!");

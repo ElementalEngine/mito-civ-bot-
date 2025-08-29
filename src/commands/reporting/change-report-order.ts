@@ -6,10 +6,7 @@ import {
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { setPlacements, getMatch } from "../../services/reporting.service";
-import { chunkByLength } from "../../utils/chunk-by-length";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
-
-import type { BaseReport } from "../../types/reports";
+import { buildReportEmbed } from "../../ui/layout/report.layout";
 
 export const data = new SlashCommandBuilder()
   .setName("change-report-order")
@@ -47,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply();
 
   try {
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
@@ -62,12 +59,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `${EMOJI_CONFIRM} Match order changed by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
-    await interaction.editReply("Match order changed successfully!");
+    const embed = buildReportEmbed(res, {
+      reporterId: interaction.user.id,
+    });
 
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
+    await interaction.followUp({
+      embeds: [embed],
+    });
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);

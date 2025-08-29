@@ -91,7 +91,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res: UploadSaveResponse = await submitSaveForReport(
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
-      interaction.user.id
+      interaction.user.id,
+      mode === "cloud",
     );
 
     if (res?.repeated === true) {

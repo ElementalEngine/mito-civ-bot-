@@ -6,11 +6,12 @@ export async function submitSaveForReport(
   fileUrl: string,
   filename: string,
   reporterDiscordId: string,
+  isCloud: boolean,
   api: ApiClient = new ApiClient(),
   downloader: (url: string) => Promise<Buffer> = downloadAttachment,
 ): Promise<UploadSaveResponse> {
   const buf = await downloader(fileUrl);
-  return api.uploadSave(buf, filename, reporterDiscordId);
+  return api.uploadSave(buf, filename, reporterDiscordId, isCloud);
 }
 
 export async function setPlacements(
