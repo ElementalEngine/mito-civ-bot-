@@ -121,7 +121,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
 
 function placement(p: AnyPlayer): number | undefined {
   const v = (p as any).placement;
-  return typeof v === "number" ? v : undefined;
+  return typeof v === "number" ? v + 1 : undefined;
 }
 function team(p: AnyPlayer): number {
   const t = (p as any).team;
