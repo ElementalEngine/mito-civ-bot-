@@ -80,6 +80,20 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
+  async assignDiscordId(matchId: string, playerId: string, discordId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    form.append("player_id", playerId);
+    form.append("discord_id", discordId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/assign-discord-id/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
   async approveMatch(matchId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);
