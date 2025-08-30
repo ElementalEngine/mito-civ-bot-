@@ -44,6 +44,13 @@ export async function triggerQuit(
   return api.triggerQuit(matchId, quitterDiscordId);
 }
 
+export async function approveMatch(
+  matchId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<OrderChangeResponse> {
+  return api.approveMatch(matchId);
+}
+
 // Future (add here when ready):
 // export async function confirmMatch(...) { ... }
 // export async function flagMatch(...) { ... }

@@ -80,6 +80,18 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
+  async approveMatch(matchId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/approve-match/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
   private async fetchWithRetry(input: RequestInfo | URL, init?: RequestInit, attempts = 3): Promise<Response> {
     let lastErr: unknown;
     for (let i = 0; i < attempts; i++) {
