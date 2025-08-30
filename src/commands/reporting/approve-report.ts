@@ -48,7 +48,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res = await approveMatch(matchId);
     const header =
       `${EMOJI_CONFIRM} Match approved successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
+      `Match ID: **${res.match_id}**\n` +
+      `Approved at: **${res.approved_at}**\n`;
 
     const embed = buildReportEmbed(res, {
       reporterId: interaction.user.id,

@@ -56,7 +56,7 @@ export async function assignDiscordId(
 export async function approveMatch(
   matchId: string,
   api: ApiClient = new ApiClient(),
-) : Promise<OrderChangeResponse> {
+) : Promise<GetMatchResponse> {
   return api.approveMatch(matchId);
 }
 

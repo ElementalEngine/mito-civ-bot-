@@ -29,7 +29,7 @@ export type UploadSaveResponse = {
   game_mode: string;
   parser_version: string;
   created_at: string;
-  confirmed: boolean;
+  approved_at: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
@@ -46,7 +46,7 @@ export type OrderChangeResponse = {
   game_mode: string;
   parser_version: string;
   created_at: string;
-  confirmed: boolean;
+  approved_at: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
@@ -63,7 +63,7 @@ export type GetMatchResponse = {
   game_mode: string;
   parser_version: string;
   created_at: string;
-  confirmed: boolean;
+  approved_at: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
