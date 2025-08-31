@@ -9,9 +9,9 @@ import {
   EMOJI_THIRD_PLACE,
   EMOJI_QUITTER,
 } from "../../config/constants";
+import { name } from "../../events/interaction-create";
 
 type AnyReport = UploadSaveResponse | BaseReport;
-type AnyPlayer = BasePlayer | ParsedPlayer;
 
 type BuildOpts = {
   reporterId?: string;
@@ -44,17 +44,16 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   const description = meta.join(" • ");
 
   // Players sorted by placement
-  const players = [...report.players] as AnyPlayer[];
+  const players = [...report.players] as ParsedPlayer[];
   players.sort((a, b) => (placement(a) ?? 9e9) - (placement(b) ?? 9e9));
 
-  // Build THREE columns
-  const colLeft: string[] = [];   // rank token + Δ
-  const colMid: string[] = [];    // mention / @name + quit flag
-  const colRight: string[] = [];  // civ / leader
+  const idColumn: string[] = [];   // id
+  const rankColumn: string[] = [];   // rank token + Δ
+  const nameCivLeaderColumn: string[] = [];    // mention / @name + quit flag + civ / leader
 
   if (isTeamMode) {
     // group by team → order by best placement
-    const teamMap = new Map<number, AnyPlayer[]>();
+    const teamMap = new Map<number, ParsedPlayer[]>();
     for (const p of players) {
       const t = team(p);
       if (!teamMap.has(t)) teamMap.set(t, []);
@@ -72,16 +71,16 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     teams.forEach((t, idx) => {
       const teamRank = idx;
       // Team header row
-      colLeft.push(rankToken(teamRank));               // 🥇 / 01: etc
-      colMid.push(`**Team ${t.teamId + 1}**`);
-      colRight.push("—");
+      idColumn.push("-");
+      rankColumn.push(rankToken(teamRank + 1));               // 🥇 / 01: etc
+      nameCivLeaderColumn.push(`**Team ${t.teamId + 1}**`);
 
       // Team members (no medals per player)
       for (const p of t.members) {
-        const pos = (placement(p) ?? t.members.indexOf(p)) + 1;
-        colLeft.push(`${numRank(pos)} ${fmtDelta(delta(p))}`);
-        colMid.push(`${who(p)}${quit(p)}`);
-        colRight.push(civText(isCiv6, isCiv7, p));
+        const pos = (placement(p) ?? t.members.indexOf(p));
+        idColumn.push(`${report.players.indexOf(p) + 1}`);
+        rankColumn.push(`${numRank(pos)} ${fmtDelta(delta(p))}`);
+        nameCivLeaderColumn.push(`${who(p)}${quit(p)} ${civText(isCiv6, isCiv7, p)}`);
       }
     });
   } else {
@@ -89,20 +88,20 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     for (let i = 0; i < players.length; i++) {
       const p = players[i];
       const pos = (placement(p) ?? i);
-      colLeft.push(`${rankToken(pos)} ${fmtDelta(delta(p))}`);
-      colMid.push(`${who(p)}${quit(p)}`);
-      colRight.push(civText(isCiv6, isCiv7, p));
+      idColumn.push(`${report.players.indexOf(p) + 1}`);
+      rankColumn.push(`${rankToken(pos)} ${fmtDelta(delta(p))}`);
+      nameCivLeaderColumn.push(`${who(p)}${quit(p)} ${civText(isCiv6, isCiv7, p)}`);
     }
   }
 
   // Clamp all three columns together so they fit 1024 chars each
-  const { leftStr, midStr, rightStr } = clampThreeColumns(colLeft, colMid, colRight, 1024);
+  const columnsStr  = clampNColumns([idColumn, rankColumn, nameCivLeaderColumn], 1024);
 
   // Footer (bulleted; no embed timestamp)
   const footerLines = [
     `• MatchID: ${("match_id" in report && report.match_id) ? report.match_id : "—"}`,
   ];
-  if (opts.reporterId) footerLines.push(`• ReporterID: @${opts.reporterId}`);
+  if (opts.reporterId) footerLines.push(`• ReporterID: ${opts.reporterId}`);
   footerLines.push(`• ${formatTodayAt(now)}`);
 
   return new EmbedBuilder()
@@ -110,25 +109,25 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     .setDescription(description || "—")
     .addFields(
       { name: "Host", value: (opts.host ?? "—") || "—", inline: false },
-      { name: "Placement / ΔELO", value: leftStr || "—", inline: true },
-      { name: "Players", value: midStr || "—", inline: true },
-      { name: "Civ / Leader", value: rightStr || "—", inline: true },
+      { name: "ID", value: columnsStr.str[0] || "—", inline: true },
+      { name: "Placement / ΔELO", value: columnsStr.str[1] || "—", inline: true },
+      { name: "Players / Civ / Leader", value: columnsStr.str[2] || "—", inline: true },
     )
     .setFooter({ text: footerLines.join("\n") });
 }
 
 /* ───────────── helpers ───────────── */
 
-function placement(p: AnyPlayer): number | undefined {
+function placement(p: ParsedPlayer): number | undefined {
   const v = (p as any).placement;
   return typeof v === "number" ? v + 1 : undefined;
 }
-function team(p: AnyPlayer): number {
+function team(p: ParsedPlayer): number {
   const t = (p as any).team;
   return typeof t === "number" ? t : 0;
 }
 /** ELO delta from likely keys; defaults to 0 for alignment. */
-function delta(p: AnyPlayer): number {
+function delta(p: ParsedPlayer): number {
   const any = p as any;
   const v =
     (typeof any.delta === "number" ? any.delta : undefined) ??
@@ -139,8 +138,9 @@ function delta(p: AnyPlayer): number {
 }
 /** 🥇/🥈/🥉 for 1..3 else "04:" style */
 function rankToken(pos: number): string {
-  const m = MEDAL_BY_POS[pos];
-  return m ? m : numRank(pos);
+  // const m = MEDAL_BY_POS[pos];
+  // return m ? m : numRank(pos);
+  return numRank(pos);
 }
 function numRank(pos: number): string {
   return `${String(pos).padStart(2, "0")}:`;
@@ -150,13 +150,13 @@ function fmtDelta(d: number): string {
   return `[ ${s}]`;
 }
 /** Mention if we have a discord id; otherwise @username */
-function who(p: AnyPlayer): string {
+function who(p: ParsedPlayer): string {
   const id = (p as any).discord_id as string | undefined;
   const name = (p as any).user_name as string | undefined;
   return id ? userMention(id) : (name ? `@${name}` : "UnknownUser");
 }
 /** Civ text (no leading spaces); '—' if unknown */
-function civText(isCiv6: boolean, isCiv7: boolean, p: AnyPlayer): string {
+function civText(isCiv6: boolean, isCiv7: boolean, p: ParsedPlayer): string {
   if (isCiv7) {
     const civKey = (p as any).civ;
     const leaderKey = (p as any).leader;
@@ -173,28 +173,24 @@ function civText(isCiv6: boolean, isCiv7: boolean, p: AnyPlayer): string {
   const cv = (p as any).civ as string | undefined;
   return cv || "—";
 }
-function quit(p: AnyPlayer): string {
+function quit(p: ParsedPlayer): string {
   return (("quit" in (p as any)) && (p as any).quit) ? ` ${EMOJI_QUITTER}` : "";
 }
 
-/** Clamp three columns to ≤max chars each, keeping the same number of rows. */
-function clampThreeColumns(
-  left: string[],
-  mid: string[],
-  right: string[],
+/** Clamp N columns to ≤max chars each, keeping the same number of rows. */
+function clampNColumns(
+  columns: string[][],
   max = 1024
-): { leftStr: string; midStr: string; rightStr: string } {
-  let n = Math.min(left.length, mid.length, right.length);
+): { str:string[] } {
+  let n = Math.min(...columns.map(arr => arr.length));
   while (n > 0) {
-    const L = left.slice(0, n).join("\n");
-    const M = mid.slice(0, n).join("\n");
-    const R = right.slice(0, n).join("\n");
-    if (L.length <= max && M.length <= max && R.length <= max) {
-      return { leftStr: L, midStr: M, rightStr: R };
+    var sliced = columns.map(arr => arr.slice(0, n).join("\n"));
+    if (sliced.every(str => str.length <= max)) {
+      return { str: sliced };
     }
     n--;
   }
-  return { leftStr: "", midStr: "", rightStr: "" };
+  return { str: [] };
 }
 
 function formatTodayAt(d: Date): string {

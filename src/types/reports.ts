@@ -1,3 +1,5 @@
+import {ParsedPlayer} from "../api/types"
+
 export type GameMode = "realtime" | "cloud";
 
 export type BaseReport = {
@@ -7,22 +9,14 @@ export type BaseReport = {
   turn: number;
   map_type: string;
   game_mode: string;
-  players: BasePlayer[];
+  players: ParsedPlayer[];
 };
 
-export type BasePlayer = {
-  discord_id: string;
-  user_name: string;
-  placement: number;
-  quit: boolean;
-  sub_of: string | null;
-};
-
-export type Civ6Player = BasePlayer & {
+export type Civ6Player = ParsedPlayer & {
   civ: string; // key into CIV6_LEADERS
 };
 
-export type Civ7Player = BasePlayer & {
+export type Civ7Player = ParsedPlayer & {
   civ: string;    // key into CIV7_CIVS
   leader: string; // key into CIV7_LEADERS
 };
