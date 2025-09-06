@@ -71,7 +71,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     teams.forEach((t, idx) => {
       const teamRank = idx;
       // Team header row
-      idColumn.push("-");
+      idColumn.push(`T${t.teamId + 1}`);
       rankColumn.push(rankToken(teamRank + 1));               // 🥇 / 01: etc
       nameCivLeaderColumn.push(`**Team ${t.teamId + 1}**`);
 
@@ -79,7 +79,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       for (const p of t.members) {
         const pos = (placement(p) ?? t.members.indexOf(p));
         idColumn.push(`${report.players.indexOf(p) + 1}`);
-        rankColumn.push(`${numRank(pos)} ${fmtDelta(delta(p))}`);
+        rankColumn.push(`${fmtDelta(delta(p))}`);
         nameCivLeaderColumn.push(`${who(p)}${quit(p)} ${civText(isCiv6, isCiv7, p)}`);
       }
     });
