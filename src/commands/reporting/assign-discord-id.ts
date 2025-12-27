@@ -7,6 +7,8 @@ import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { assignDiscordId } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { chunkByLength } from "../../utils/chunk-by-length";
+import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
 import type { BaseReport } from "../../types/reports";
 
@@ -60,6 +62,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
     const res = await assignDiscordId(matchId, playerId, discordId);
+
+    const header =
+      `${EMOJI_CONFIRM} Discord ID assigned by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `Match ID: **${res.match_id}**\n`;
+
+    const full = header + convertMatchToStr(res as BaseReport);
+    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
+      await interaction.followUp({ content: chunk }); 
+    }
+
     const embed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
     });
@@ -69,6 +81,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`);
   }
 }
