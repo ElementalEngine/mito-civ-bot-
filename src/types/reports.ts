@@ -9,6 +9,7 @@ export type BaseReport = {
   turn: number;
   map_type: string;
   game_mode: string;
+  is_cloud: boolean;
   players: ParsedPlayer[];
 };
 

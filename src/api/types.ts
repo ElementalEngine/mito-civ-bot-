@@ -63,6 +63,7 @@ export type GetMatchResponse = {
   age: string;
   map_type: string;
   game_mode: string;
+  is_cloud: boolean;
   parser_version: string;
   created_at: string;
   approved_at: string | null;

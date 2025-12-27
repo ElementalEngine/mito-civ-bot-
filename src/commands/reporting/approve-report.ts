@@ -7,6 +7,9 @@ import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { approveMatch } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { convertMatchToStr } from "../../utils/convert-match-to-str";
+
+import type { BaseReport } from "../../types/reports";
 
 export const data = new SlashCommandBuilder()
   .setName("approve-report")
@@ -46,17 +49,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
     const res = await approveMatch(matchId, interaction.user.id);
+    var historyChannelId;
+    if ((res as BaseReport).is_cloud) {
+      historyChannelId = config.discord.channels.cloudReportingHistory;
+    } else {
+      historyChannelId = config.discord.channels.realtimeReportingHistory;
+    }
+    const historyChannel = interaction.guild?.channels.cache.get(historyChannelId);
+    if (!historyChannel || !historyChannel.isTextBased()) {
+      await interaction.editReply(`${EMOJI_FAIL} History channel ${historyChannelId} not found or is not text-based.`);
+      return;
+    }
     const header =
       `${EMOJI_CONFIRM} Match approved successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n` +
       `Approved at: **${res.approved_at}**\n`;
 
-    const embed = buildReportEmbed(res, {
-      reporterId: interaction.user.id,
-    });
-
+    const full = header + convertMatchToStr(res as BaseReport);
+    await historyChannel.send({ content: full });
     await interaction.followUp({
-      embeds: [embed],
+      content: `"Report is approved successfully!"`,
     });
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");

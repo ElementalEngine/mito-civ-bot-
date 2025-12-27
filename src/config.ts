@@ -28,6 +28,10 @@ const discord = {
       process.env.CHANNEL_REALTIME_UPLOADS_ID ?? '',
     cloudUploads:
       process.env.CHANNEL_CLOUD_UPLOADS_ID ?? '',
+    realtimeReportingHistory:
+      process.env.CHANNEL_REALTIME_REPORTING_HISTORY_ID ?? '',
+    cloudReportingHistory:
+      process.env.CHANNEL_CLOUD_REPORTING_HISTORY_ID ?? '',
   },
   roles: {
     moderator: process.env.ROLE_MODERATOR!,
