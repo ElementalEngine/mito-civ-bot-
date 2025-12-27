@@ -30,6 +30,7 @@ export type UploadSaveResponse = {
   parser_version: string;
   created_at: string;
   approved_at: string | null;
+  approver_discord_id: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
@@ -47,6 +48,7 @@ export type OrderChangeResponse = {
   parser_version: string;
   created_at: string;
   approved_at: string | null;
+  approver_discord_id: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];
@@ -64,6 +66,7 @@ export type GetMatchResponse = {
   parser_version: string;
   created_at: string;
   approved_at: string | null;
+  approver_discord_id: string | null;
   flagged: boolean;
   flagged_by: string | null;
   players: ParsedPlayer[];

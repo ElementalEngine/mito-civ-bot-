@@ -94,9 +94,10 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
-  async approveMatch(matchId: string): Promise<GetMatchResponse> {
+  async approveMatch(matchId: string, approverDiscordId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);
+    form.append("approver_discord_id", approverDiscordId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/approve-match/`, {
       method: "PUT",

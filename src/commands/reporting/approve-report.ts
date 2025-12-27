@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can approve a report`);
       return;
     }
-    const res = await approveMatch(matchId);
+    const res = await approveMatch(matchId, interaction.user.id);
     const header =
       `${EMOJI_CONFIRM} Match approved successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n` +

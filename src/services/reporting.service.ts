@@ -55,9 +55,10 @@ export async function assignDiscordId(
 
 export async function approveMatch(
   matchId: string,
+  approverDiscordId: string,
   api: ApiClient = new ApiClient(),
 ) : Promise<GetMatchResponse> {
-  return api.approveMatch(matchId);
+  return api.approveMatch(matchId, approverDiscordId);
 }
 
 // Future (add here when ready):
