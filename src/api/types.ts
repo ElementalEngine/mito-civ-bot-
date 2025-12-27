@@ -27,6 +27,7 @@ export type UploadSaveResponse = {
   age: string;
   map_type: string;
   game_mode: string;
+  is_cloud: boolean;
   parser_version: string;
   created_at: string;
   approved_at: string | null;
@@ -45,6 +46,7 @@ export type OrderChangeResponse = {
   age: string;
   map_type: string;
   game_mode: string;
+  is_cloud: boolean;
   parser_version: string;
   created_at: string;
   approved_at: string | null;
