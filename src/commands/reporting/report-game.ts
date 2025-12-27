@@ -5,11 +5,13 @@ import {
 } from "discord.js";
 import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
-import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL } from "../../config/constants";
+import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { submitSaveForReport } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { chunkByLength } from "../../utils/chunk-by-length";
+import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
-import type { GameMode } from "../../types/reports";
+import type { GameMode, BaseReport } from "../../types/reports";
 import type { UploadSaveResponse } from "../../api/types";
 
 export const data = new SlashCommandBuilder()
@@ -100,7 +102,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    await interaction.editReply(`${EMOJI_CONFIRM} Save parsed successfully!`);
+    const header =
+      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `Match ID: **${res.match_id}**\n`;
+
+    await interaction.editReply("Save parsed successfully!");
+
+    const full = header + convertMatchToStr(res as BaseReport);
+    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
+      await interaction.followUp({ content: chunk }); 
+    }
 
     // Build and send a SINGLE compact embed based on returned data
     const embed = buildReportEmbed(res, {
