@@ -8,6 +8,7 @@ import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constan
 import { approveMatch } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { chunkByLength } from "../../utils/chunk-by-length";
 
 import type { BaseReport } from "../../types/reports";
 
@@ -66,12 +67,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `Approved at: **${res.approved_at}**\n`;
 
     const full = header + convertMatchToStr(res as BaseReport);
-    await historyChannel.send({ content: full });
+    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
+      await historyChannel.send({ content: chunk }); 
+    }
     await interaction.followUp({
       content: `"Report is approved successfully!"`,
     });
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`);
   }
 }
