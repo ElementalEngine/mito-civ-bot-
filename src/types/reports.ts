@@ -10,7 +10,7 @@ export type BaseReport = {
   map_type: string;
   game_mode: string;
   is_cloud: boolean;
-  message_id: string;
+  discord_messages_id_list: string[];
   players: ParsedPlayer[];
 };
 

@@ -7,7 +7,7 @@ import {
 import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
 import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { submitSaveForReport } from "../../services/reporting.service";
+import { submitSaveForReport, appendMessageIdList } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
@@ -129,9 +129,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
-    const full = header + convertMatchToStr(res as BaseReport);
+    const full = header + convertMatchToStr(res as BaseReport, true);
+    var messageIdsList = []
     for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
+      var followUp = await interaction.followUp({ content: chunk }); 
+      messageIdsList.push(followUp.id);
+    }
+    const appendRes: UploadSaveResponse = await appendMessageIdList(
+      res.match_id,
+      messageIdsList
+    );
+    if (!appendRes) {
+      console.error("Failed to append message ID list for match:", res.match_id);
     }
   } catch (err: any) {
     const msg = err?.body

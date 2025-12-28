@@ -15,19 +15,32 @@ export class ApiClient {
     this.fetcher = fetcher;
   }
 
-  async uploadSave(fileBuf: Buffer, filename: string, reporterDiscordId: string, isCloud: boolean, messageId: string): Promise<UploadSaveResponse> {
+  async uploadSave(fileBuf: Buffer, filename: string, reporterDiscordId: string, isCloud: boolean, discordMessageId: string): Promise<UploadSaveResponse> {
     const form = new FormData();
     // TS typing-safe for Node: wrap Buffer in Uint8Array for File/Blob
     form.append("file", new File([new Uint8Array(fileBuf)], filename));
     form.append("reporter_discord_id", reporterDiscordId);
     form.append("is_cloud", isCloud ? "1" : "0");
-    form.append("message_id", messageId);
+    form.append("discord_message_id", discordMessageId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/upload-game-report/`, {
       method: "POST",
       body: form,
     });
 
+    return (await this.parseJson(res)) as UploadSaveResponse;
+  }
+
+  async appendMessageIdList(matchId: string, messageIdList: string[]): Promise<UploadSaveResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    for (const msgId of messageIdList) {
+      form.append("discord_message_id", msgId);
+    }
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/append-message-id-list/`, {
+      method: "PUT",
+      body: form,
+    });
     return (await this.parseJson(res)) as UploadSaveResponse;
   }
 
@@ -68,10 +81,11 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
-  async triggerQuit(matchId: string, quitterDiscordId: string): Promise<GetMatchResponse> {
+  async triggerQuit(matchId: string, quitterDiscordId: string, discordMessgeId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);
     form.append("quitter_discord_id", quitterDiscordId);
+    form.append("discord_message_id", discordMessgeId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/trigger-quit/`, {
       method: "PUT",

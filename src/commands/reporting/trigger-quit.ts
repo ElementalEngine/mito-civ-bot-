@@ -49,9 +49,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply();
-
   try {
+    const triggerQuitMsg = await interaction.reply(`Processing trigger quit request for <@${quitterDiscordId}>...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       const getMatchRes = await getMatch(matchId);
       if (getMatchRes?.reporter_discord_id != interaction.user.id) {
@@ -59,12 +58,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
       }
     }
-    const res = await triggerQuit(matchId, quitterDiscordId);
+    const res = await triggerQuit(matchId, quitterDiscordId, triggerQuitMsg.id);
     const updatedEmbed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
       // host: userMention(interaction.user.id), // prefill if desired later
     });
-    const embedMsgId = (res as BaseReport).message_id;
+    const embedMsgId = (res as BaseReport).discord_messages_id_list[0];
     const message = await interaction.channel?.messages.fetch(embedMsgId);
     if (message) {
       await message.edit({ embeds: [updatedEmbed] });
@@ -73,11 +72,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `${EMOJI_CONFIRM} Player <@${quitterDiscordId}> quit is triggered by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
-
     const full = header + convertMatchToStr(res as BaseReport, false);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
+    interaction.editReply(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);

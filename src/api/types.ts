@@ -29,6 +29,7 @@ export type UploadSaveResponse = {
   game_mode: string;
   is_cloud: boolean;
   parser_version: string;
+  discord_messages_id_list: string[];
   created_at: string;
   approved_at: string | null;
   approver_discord_id: string | null;
@@ -67,7 +68,7 @@ export type GetMatchResponse = {
   game_mode: string;
   is_cloud: boolean;
   parser_version: string;
-  message_id: string;
+  discord_messages_id_list: string[];
   created_at: string;
   approved_at: string | null;
   approver_discord_id: string | null;

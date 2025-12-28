@@ -7,12 +7,20 @@ export async function submitSaveForReport(
   filename: string,
   reporterDiscordId: string,
   isCloud: boolean,
-  messageId: string,
+  discordMessageId: string,
   api: ApiClient = new ApiClient(),
   downloader: (url: string) => Promise<Buffer> = downloadAttachment,
 ): Promise<UploadSaveResponse> {
   const buf = await downloader(fileUrl);
-  return api.uploadSave(buf, filename, reporterDiscordId, isCloud, messageId);
+  return api.uploadSave(buf, filename, reporterDiscordId, isCloud, discordMessageId);
+}
+
+export async function appendMessageIdList(
+  matchId: string,
+  messageIdList: string[],
+  api: ApiClient = new ApiClient(),
+) : Promise<UploadSaveResponse> {
+  return api.appendMessageIdList(matchId, messageIdList);
 }
 
 export async function setPlacements(
@@ -40,9 +48,10 @@ export async function deletePendingMatch(
 export async function triggerQuit(
   matchId: string,
   quitterDiscordId: string,
+  discordMessgeId: string,
   api: ApiClient = new ApiClient(),
 ) : Promise<GetMatchResponse> {
-  return api.triggerQuit(matchId, quitterDiscordId);
+  return api.triggerQuit(matchId, quitterDiscordId, discordMessgeId);
 }
 
 export async function assignDiscordId(
