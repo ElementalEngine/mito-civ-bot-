@@ -61,7 +61,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res = await triggerQuit(matchId, quitterDiscordId, triggerQuitMsg.id);
     const updatedEmbed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
-      // host: userMention(interaction.user.id), // prefill if desired later
     });
     const embedMsgId = (res as BaseReport).discord_messages_id_list[0];
     const message = await interaction.channel?.messages.fetch(embedMsgId);

@@ -57,10 +57,11 @@ export async function triggerQuit(
 export async function assignDiscordId(
   matchId: string,
   playerId: string,
-  discordId: string,
+  playerDiscordId: string,
+  discordMessageId: string,
   api: ApiClient = new ApiClient(),
 ) : Promise<GetMatchResponse> {
-  return api.assignDiscordId(matchId, playerId, discordId);
+  return api.assignDiscordId(matchId, playerId, playerDiscordId, discordMessageId);
 }
 
 export async function approveMatch(

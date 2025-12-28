@@ -42,7 +42,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const matchId = interaction.options.getString("match-id", true) as string;
   const playerId = interaction.options.getString("player-id", true) as string;
-  const discordId = interaction.options.getString("discord-id", true) as string;
+  const playerDiscordId = interaction.options.getString("discord-id", true) as string;
 
   const errors: string[] = [];
 
@@ -54,31 +54,29 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply();
-
   try {
+    const assignDiscordIdMsg = await interaction.reply(`Processing assign discord id request for <@${playerDiscordId}>...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`);
       return;
     }
-    const res = await assignDiscordId(matchId, playerId, discordId);
+    const res = await assignDiscordId(matchId, playerId, playerDiscordId, assignDiscordIdMsg.id);
 
-    const header =
-      `${EMOJI_CONFIRM} Discord ID assigned by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
-
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
-
-    const embed = buildReportEmbed(res, {
+    const updatedEmbed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
     });
+    const embedMsgId = (res as BaseReport).discord_messages_id_list[0];
+    const message = await interaction.channel?.messages.fetch(embedMsgId);
+    if (message) {
+      await message.edit({ embeds: [updatedEmbed] });
+    }
 
-    await interaction.followUp({
-      embeds: [embed],
-    });
+    const header =
+      `${EMOJI_CONFIRM} <@${playerDiscordId}> (${playerDiscordId}) Discord ID assigned by <@${interaction.user.id}>\n` +
+      `Match ID: **${res.match_id}**\n`;
+
+    const full = header + convertMatchToStr(res as BaseReport, false);
+    interaction.editReply(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`);
