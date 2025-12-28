@@ -4,11 +4,10 @@ import {
   MessageFlags,
 } from "discord.js";
 import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
+import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants";
 import { setPlacements, getMatch } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
-import { chunkByLength } from "../../utils/chunk-by-length";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { getPlayerListMessage, isValidOrder } from "../../utils/convert-match-to-str";
 
 import type { BaseReport } from "../../types/reports";
 
@@ -48,32 +47,47 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply();
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral,
+  });
 
   try {
-    if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
-      const getMatchRes = await getMatch(matchId);
-      if (getMatchRes?.reporter_discord_id != interaction.user.id) {
-        await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
-        return;
-      }
+    await interaction.editReply(`Processing change report order request...`);
+    const getMatchRes = await getMatch(matchId);
+    if (getMatchRes?.reporter_discord_id != interaction.user.id &&
+        !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
+      console.log(getMatchRes.reporter_discord_id, interaction.user.id);
+      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
+      return;
     }
-    const res = await setPlacements(matchId, newOrder);
+    if (isValidOrder(newOrder, getMatchRes.players.length) === false) {
+      await interaction.editReply(`${EMOJI_FAIL} The new order provided is invalid.`);
+      return;
+    }
     const header =
-      `${EMOJI_CONFIRM} Match order changed by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
+      `${EMOJI_REPORT} Processing match order change to ${newOrder} by <@${interaction.user.id}>\n` +
+      `Match ID: **${matchId}**\n`;
+    const playerListMessage = getPlayerListMessage(getMatchRes, newOrder);
+    const changingOrderMsg = header + playerListMessage;
+    const interactionReply = await interaction.followUp({ content: changingOrderMsg });
+    const changingOrderMsgId = interactionReply.id;
+    const res = await setPlacements(matchId, newOrder, changingOrderMsgId);
 
-    const embed = buildReportEmbed(res, {
+    const confirmMsg =
+      `${EMOJI_CONFIRM} Match order changed to ${newOrder} by <@${interaction.user.id}>\n` +
+      `Match ID: **${matchId}**\n` + playerListMessage;
+    await interactionReply.edit(confirmMsg);
+
+    const updatedEmbed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
     });
+    const embedMsgId = (res as BaseReport).discord_messages_id_list[0];
+    const message = await interaction.channel?.messages.fetch(embedMsgId);
+    if (message) {
+      await message.edit({ embeds: [updatedEmbed] });
+    }
+    interaction.editReply({ content: `${EMOJI_CONFIRM} Change report order successful!` });
 
-    await interaction.followUp({
-      embeds: [embed],
-    });
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Change report order failed: ${msg}`);

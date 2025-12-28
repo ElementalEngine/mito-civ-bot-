@@ -19,16 +19,17 @@ export async function appendMessageIdList(
   matchId: string,
   messageIdList: string[],
   api: ApiClient = new ApiClient(),
-) : Promise<UploadSaveResponse> {
+) : Promise<GetMatchResponse> {
   return api.appendMessageIdList(matchId, messageIdList);
 }
 
 export async function setPlacements(
   matchId: string,
   newOrder: string,
+  discordMessageId: string,
   api: ApiClient = new ApiClient(),
-) : Promise<OrderChangeResponse> {
-  return api.changeOrder(matchId, newOrder);
+) : Promise<GetMatchResponse> {
+  return api.changeOrder(matchId, newOrder, discordMessageId);
 }
 
 export async function getMatch(

@@ -44,17 +44,18 @@ export class ApiClient {
     return (await this.parseJson(res)) as UploadSaveResponse;
   }
 
-  async changeOrder(matchId: string, newOrder: string): Promise<OrderChangeResponse> {
+  async changeOrder(matchId: string, newOrder: string, discordMessageId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);
     form.append("new_order", newOrder);
+    form.append("discord_message_id", discordMessageId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/change-order/`, {
       method: "PUT",
       body: form,
     });
 
-    return (await this.parseJson(res)) as OrderChangeResponse;
+    return (await this.parseJson(res)) as GetMatchResponse;
   }
 
   async deletePendingMatch(matchId: string): Promise<GetMatchResponse> {

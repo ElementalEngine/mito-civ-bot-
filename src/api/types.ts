@@ -40,25 +40,6 @@ export type UploadSaveResponse = {
   reporter_discord_id: string;
 };
 
-export type OrderChangeResponse = {
-  match_id: string;
-  game: string;
-  turn: number;
-  age: string;
-  map_type: string;
-  game_mode: string;
-  is_cloud: boolean;
-  parser_version: string;
-  created_at: string;
-  approved_at: string | null;
-  approver_discord_id: string | null;
-  flagged: boolean;
-  flagged_by: string | null;
-  players: ParsedPlayer[];
-  repeated: boolean;
-  reporter_discord_id: string;
-}
-
 export type GetMatchResponse = {
   match_id: string;
   game: string;
