@@ -7,7 +7,7 @@ import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { approveMatch } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { convertMatchToStr, getPlayerListMessage } from "../../utils/convert-match-to-str";
 import { chunkByLength } from "../../utils/chunk-by-length";
 
 import type { BaseReport } from "../../types/reports";
@@ -42,7 +42,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply();
+  await interaction.deferReply({
+    flags: MessageFlags.Ephemeral,
+  });
 
   try {
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
@@ -61,18 +63,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.editReply(`${EMOJI_FAIL} History channel ${historyChannelId} not found or is not text-based.`);
       return;
     }
-    const header =
-      `${EMOJI_CONFIRM} Match approved successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n` +
-      `Approved at: **${res.approved_at}**\n`;
 
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await historyChannel.send({ content: chunk }); 
+    const playerList = getPlayerListMessage(res, "", "\t");
+    const embed = buildReportEmbed(res);
+    await historyChannel.send({
+      content: playerList,
+      embeds: [embed] 
+    }); 
+    for (var msg in res.discord_messages_id_list) {
+      try {
+        const message = await interaction.channel?.messages.fetch(res.discord_messages_id_list[msg]);
+        if (message) {
+          await message.delete();
+        }
+      } catch (e) {
+        console.log(`Failed to delete message id ${res.discord_messages_id_list[msg]} for match ${matchId}`);
+      }
     }
-    await interaction.followUp({
-      content: `"Report is approved successfully!"`,
-    });
+    await interaction.editReply(`Report is approved successfully!`);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`);

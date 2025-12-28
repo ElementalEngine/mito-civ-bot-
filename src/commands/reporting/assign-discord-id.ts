@@ -53,9 +53,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
     return;
   }
+  await interaction.deferReply();
 
   try {
-    const assignDiscordIdMsg = await interaction.reply(`Processing assign discord id request for <@${playerDiscordId}>...`);
+    const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id request for <@${playerDiscordId}>...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`);
       return;
@@ -76,7 +77,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `Match ID: **${res.match_id}**\n`;
 
     const full = header + convertMatchToStr(res as BaseReport, false);
-    interaction.editReply(full);
+    assignDiscordIdMsg.edit(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`);

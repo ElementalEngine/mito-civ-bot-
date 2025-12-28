@@ -4,12 +4,9 @@ import {
   MessageFlags,
 } from "discord.js";
 import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
+import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants";
 import { deletePendingMatch, getMatch } from "../../services/reporting.service";
-import { chunkByLength } from "../../utils/chunk-by-length";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
-
-import type { BaseReport } from "../../types/reports";
+import { getPlayerListMessage } from "../../utils/convert-match-to-str";
 
 export const data = new SlashCommandBuilder()
   .setName("delete-match")
@@ -44,25 +41,37 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
-      const getMatchRes = await getMatch(matchId);
-      if (getMatchRes?.reporter_discord_id != interaction.user.id) {
-        await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can delete a report`);
-        return;
-      }
+    await interaction.editReply(`Deleting report...`);
+    const getMatchRes = await getMatch(matchId);
+    if (getMatchRes?.reporter_discord_id != interaction.user.id &&
+        !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
+      console.log(`User trying to delete match: ${interaction.user.id}. Original reporter id ${getMatchRes?.reporter_discord_id}`);
+      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can delete a report`);
+      return;
     }
+    const header =
+      `${EMOJI_REPORT} Removing match by <@${interaction.user.id}>\n` +
+      `Match ID: **${matchId}**\n`;
+    const playerListMessage = getPlayerListMessage(getMatchRes);
+    const changingOrderMsg = header + playerListMessage;
+    const interactionReply = await interaction.followUp({ content: changingOrderMsg });
+
     const res = await deletePendingMatch(matchId);
 
-    const header =
-      `${EMOJI_CONFIRM} Match removed successfully by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
+    const successMsg = `${EMOJI_CONFIRM} Match **${matchId}** removed successfully!\n` + playerListMessage;
+    interactionReply.edit(successMsg);
 
-    await interaction.editReply("Match removed successfully!");
-
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
+    for (var msg in res.discord_messages_id_list) {
+      try {
+        const message = await interaction.channel?.messages.fetch(res.discord_messages_id_list[msg]);
+        if (message) {
+          await message.delete();
+        }
+      } catch (e) {
+        console.log(`Failed to delete message id ${res.discord_messages_id_list[msg]} for match ${matchId}`);
+      }
     }
+
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);

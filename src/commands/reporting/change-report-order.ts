@@ -56,18 +56,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const getMatchRes = await getMatch(matchId);
     if (getMatchRes?.reporter_discord_id != interaction.user.id &&
         !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
-      console.log(getMatchRes.reporter_discord_id, interaction.user.id);
       await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
       return;
     }
-    if (isValidOrder(newOrder, getMatchRes.players.length) === false) {
+    if (isValidOrder(newOrder, getMatchRes.players) === false) {
       await interaction.editReply(`${EMOJI_FAIL} The new order provided is invalid.`);
       return;
     }
     const header =
       `${EMOJI_REPORT} Processing match order change to ${newOrder} by <@${interaction.user.id}>\n` +
       `Match ID: **${matchId}**\n`;
-    const playerListMessage = getPlayerListMessage(getMatchRes, newOrder);
+    const playerListMessage = `Players: ` + getPlayerListMessage(getMatchRes, newOrder);
     const changingOrderMsg = header + playerListMessage;
     const interactionReply = await interaction.followUp({ content: changingOrderMsg });
     const changingOrderMsgId = interactionReply.id;

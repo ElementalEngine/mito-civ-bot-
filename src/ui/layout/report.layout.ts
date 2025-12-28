@@ -14,6 +14,7 @@ import { name } from "../../events/interaction-create";
 type AnyReport = UploadSaveResponse | BaseReport;
 
 type BuildOpts = {
+  header?: string;
   reporterId?: string;
   apiMs?: number;
   now?: Date;
@@ -36,6 +37,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
 
   // Meta
   const meta: string[] = [];
+  if (opts.header) meta.push(opts.header);
   meta.push(`Game: **${report.game}**`);
   if ("game_mode" in report && report.game_mode) meta.push(`Mode: **${report.game_mode}**`);
   if ("turn" in report && typeof report.turn === "number") meta.push(`Turn: **${report.turn}**`);
