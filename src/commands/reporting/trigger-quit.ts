@@ -1,4 +1,5 @@
 import {
+  EmbedBuilder,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   MessageFlags,
@@ -6,6 +7,7 @@ import {
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { triggerQuit, getMatch } from "../../services/reporting.service";
+import { buildReportEmbed } from "../../ui/layout/report.layout";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
@@ -47,7 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply();
 
   try {
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
@@ -58,13 +60,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       }
     }
     const res = await triggerQuit(matchId, quitterDiscordId);
+    const updatedEmbed = buildReportEmbed(res, {
+      reporterId: interaction.user.id,
+      // host: userMention(interaction.user.id), // prefill if desired later
+    });
+    const embedMsgId = (res as BaseReport).message_id;
+    const message = await interaction.channel?.messages.fetch(embedMsgId);
+    if (message) {
+      await message.edit({ embeds: [updatedEmbed] });
+    }
     const header =
       `${EMOJI_CONFIRM} Player <@${quitterDiscordId}> quit is triggered by <@${interaction.user.id}> (${interaction.user.id})\n` +
       `Match ID: **${res.match_id}**\n`;
 
-    await interaction.editReply("Report is changed successfully to trigger quit!");
 
-    const full = header + convertMatchToStr(res as BaseReport);
+    const full = header + convertMatchToStr(res as BaseReport, false);
     for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
       await interaction.followUp({ content: chunk }); 
     }

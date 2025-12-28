@@ -10,6 +10,7 @@ export type BaseReport = {
   map_type: string;
   game_mode: string;
   is_cloud: boolean;
+  message_id: string;
   players: ParsedPlayer[];
 };
 

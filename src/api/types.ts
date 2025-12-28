@@ -67,6 +67,7 @@ export type GetMatchResponse = {
   game_mode: string;
   is_cloud: boolean;
   parser_version: string;
+  message_id: string;
   created_at: string;
   approved_at: string | null;
   approver_discord_id: string | null;
