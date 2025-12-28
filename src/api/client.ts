@@ -15,12 +15,13 @@ export class ApiClient {
     this.fetcher = fetcher;
   }
 
-  async uploadSave(fileBuf: Buffer, filename: string, reporterDiscordId: string, isCloud: boolean): Promise<UploadSaveResponse> {
+  async uploadSave(fileBuf: Buffer, filename: string, reporterDiscordId: string, isCloud: boolean, messageId: string): Promise<UploadSaveResponse> {
     const form = new FormData();
     // TS typing-safe for Node: wrap Buffer in Uint8Array for File/Blob
     form.append("file", new File([new Uint8Array(fileBuf)], filename));
     form.append("reporter_discord_id", reporterDiscordId);
     form.append("is_cloud", isCloud ? "1" : "0");
+    form.append("message_id", messageId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/upload-game-report/`, {
       method: "POST",

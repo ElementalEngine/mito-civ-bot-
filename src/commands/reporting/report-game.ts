@@ -1,4 +1,5 @@
 import {
+  EmbedBuilder,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   MessageFlags,
@@ -10,6 +11,9 @@ import { submitSaveForReport } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/layout/report.layout";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import {
+  EMOJI_REPORT,
+} from "../../config/constants";
 
 import type { GameMode, BaseReport } from "../../types/reports";
 import type { UploadSaveResponse } from "../../api/types";
@@ -50,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const mode = interaction.options.getString("game-mode", true) as GameMode;
   const edition = interaction.options.getString("game-edition", true) as CivEdition;
@@ -90,11 +94,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   try {
+    const pendingEmbed = new EmbedBuilder()
+      .setDescription(`${EMOJI_REPORT} Uploading and processing your save file, please wait...`);
+    const pendingMsg = await interaction.editReply(
+      { embeds : [pendingEmbed] }
+    );
     const res: UploadSaveResponse = await submitSaveForReport(
       save.url,
       save.name ?? (edition === "CIV6" ? "game.Civ6Save" : "game.Civ7Save"),
       interaction.user.id,
       mode === "cloud",
+      pendingMsg.id
     );
 
     if (res?.repeated === true) {
@@ -102,27 +112,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    const header =
-      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
-      `Match ID: **${res.match_id}**\n`;
-
-    await interaction.editReply("Save parsed successfully!");
-
-    const full = header + convertMatchToStr(res as BaseReport);
-    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
-      await interaction.followUp({ content: chunk }); 
-    }
-
     // Build and send a SINGLE compact embed based on returned data
     const embed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
       // host: userMention(interaction.user.id), // prefill if desired later
     });
-
-    await interaction.followUp({
+    const embedMsg = await interaction.editReply({
       embeds: [embed],
-      // flags: MessageFlags.Ephemeral, // enable if you prefer private review
     });
+
+    await embedMsg.react("✅");
+    await embedMsg.react("❌");
+
+    // Ping message
+    const header =
+      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `Match ID: **${res.match_id}**\n`;
+
+    const full = header + convertMatchToStr(res as BaseReport);
+    for (const chunk of chunkByLength(full, MAX_DISCORD_LEN)) {
+      await interaction.followUp({ content: chunk }); 
+    }
   } catch (err: any) {
     const msg = err?.body
       ? `${err.message}: ${JSON.stringify(err.body)}`
