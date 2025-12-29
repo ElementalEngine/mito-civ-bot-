@@ -52,12 +52,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const getMatchRes = await getMatch(matchId);
     if (getMatchRes?.reporter_discord_id != interaction.user.id &&
         !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
-      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can assign subs`);
+      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can assign subs`)
+        .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+        .catch();
       return;
     }
     const subOutPlayerIndex = parseInt(subOutId) - 1;
     if ((subOutPlayerIndex < 0) || (subOutPlayerIndex >= (getMatchRes?.players.length ?? 0)) || (getMatchRes?.players[subOutPlayerIndex].subbed_out === false)) {
-      await interaction.editReply(`${EMOJI_FAIL} Invalid sub out player ID ${subOutId} for match ${matchId} or player is not marked as subbed out`);
+      await interaction.editReply(`${EMOJI_FAIL} Invalid sub out player ID ${subOutId} for match ${matchId} or player is not marked as subbed out`)
+        .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+        .catch();
       return;
     }
     const subOutPlayer = getMatchRes?.players[subOutPlayerIndex];
@@ -82,6 +90,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     removeSubMsg.edit(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }

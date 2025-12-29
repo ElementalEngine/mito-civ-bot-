@@ -83,6 +83,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.editReply(`Report is approved successfully!`);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }

@@ -89,7 +89,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (errors.length) {
     await interaction.editReply({
       content: `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join("\n")}`,
-    });
+    }).then(repliedMessage => {
+        setTimeout(() => repliedMessage.delete(), 60 * 1000);
+      })
+      .catch();
     return;
   }
 
@@ -108,7 +111,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     if (res?.repeated === true) {
-      await interaction.editReply(`Match already reported! Match ID: ${res.match_id}`);
+      await interaction.editReply(`Match already reported! Match ID: ${res.match_id}`)
+        .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+        .catch();
       return;
     }
 
@@ -126,7 +133,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     // Ping message
     const header =
-      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}> (${interaction.user.id})\n` +
+      `${EMOJI_CONFIRM} Match reported by <@${interaction.user.id}>\n` +
       `Match ID: **${res.match_id}**\n`;
 
     const full = header + convertMatchToStr(res as BaseReport, true);
@@ -146,6 +153,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const msg = err?.body
       ? `${err.message}: ${JSON.stringify(err.body)}`
       : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }

@@ -59,7 +59,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const res = await deletePendingMatch(matchId);
 
     const successMsg = `${EMOJI_CONFIRM} Match **${matchId}** removed successfully!\n` + playerListMessage;
-    interactionReply.edit(successMsg);
+    interactionReply.edit(successMsg)
+      .then(repliedMessage => {
+        setTimeout(() => repliedMessage.delete(), 10 * 60 * 1000);
+      })
+      .catch();
 
     for (var msg in res.discord_messages_id_list) {
       try {
@@ -74,6 +78,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }

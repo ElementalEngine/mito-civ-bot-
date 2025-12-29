@@ -58,12 +58,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const getMatchRes = await getMatch(matchId);
     if (getMatchRes?.reporter_discord_id != interaction.user.id &&
         !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
-      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can assign subs`);
+      await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can assign subs`)
+        .then(repliedMessage => {
+            setTimeout(() => repliedMessage.delete(), 60 * 1000);
+          })
+        .catch();
       return;
     }
     const subInPlayerIndex = parseInt(subInId) - 1;
     if (subInPlayerIndex < 0 || subInPlayerIndex >= (getMatchRes?.players.length ?? 0)) {
-      await interaction.editReply(`${EMOJI_FAIL} Invalid sub in player ID ${subInId} for match ${matchId}`);
+      await interaction.editReply(`${EMOJI_FAIL} Invalid sub in player ID ${subInId} for match ${matchId}`)
+        .then(repliedMessage => {
+            setTimeout(() => repliedMessage.delete(), 60 * 1000);
+          })
+        .catch();
       return;
     }
     const subInPlayer = getMatchRes?.players[subInPlayerIndex];
@@ -87,6 +95,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     assignSubMsg.edit(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }

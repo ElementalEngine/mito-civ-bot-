@@ -76,6 +76,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     interaction.editReply(full);
   } catch (err: any) {
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`);
+    await interaction.editReply(`${EMOJI_FAIL} Upload failed: ${msg}`)
+      .then(repliedMessage => {
+          setTimeout(() => repliedMessage.delete(), 60 * 1000);
+        })
+      .catch();
   }
 }
