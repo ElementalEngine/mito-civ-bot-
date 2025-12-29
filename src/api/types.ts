@@ -11,7 +11,8 @@ export type ParsedPlayer = {
   placement: number;
   quit: boolean;
   delta?: number;
-  sub_of: string | null;
+  is_sub: boolean;
+  subbed_out: boolean;
 };
 
 export type ParsedSave = {

@@ -9,12 +9,11 @@ export function isValidOrder(new_order: string, players: ParsedPlayer[]): boolea
   if (order.length !== num_teams) {
     return false;
   }
-  const seen = new Set<number>();
-  for (const id of order) {
-    if (id < 1 || id > num_teams || seen.has(id)) {
+  let order_set = new Set(order);
+  for (var i = 1; i <= num_teams; i++) {
+    if (!order_set.has(i)) {
       return false;
     }
-    seen.add(id);
   }
   return true;
 }

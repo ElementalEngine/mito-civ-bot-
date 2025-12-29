@@ -82,7 +82,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
         const pos = (placement(p) ?? t.members.indexOf(p));
         idColumn.push(`${report.players.indexOf(p) + 1}`);
         rankColumn.push(`${fmtDelta(delta(p))}`);
-        nameCivLeaderColumn.push(`${who(p)}${quit(p)} ${civText(isCiv6, isCiv7, p)}`);
+        nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
       }
     });
   } else {
@@ -92,7 +92,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       const pos = (placement(p) ?? i);
       idColumn.push(`${report.players.indexOf(p) + 1}`);
       rankColumn.push(`${rankToken(pos)} ${fmtDelta(delta(p))}`);
-      nameCivLeaderColumn.push(`${who(p)}${quit(p)} ${civText(isCiv6, isCiv7, p)}`);
+      nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
     }
   }
 
@@ -177,6 +177,16 @@ function civText(isCiv6: boolean, isCiv7: boolean, p: ParsedPlayer): string {
 }
 function quit(p: ParsedPlayer): string {
   return (("quit" in (p as any)) && (p as any).quit) ? ` ${EMOJI_QUITTER}` : "";
+}
+
+function subinfo(p: ParsedPlayer): string {
+  if (p.subbed_out) {
+    return ` (subbed out)`;
+  } else if (p.is_sub) {
+    return ` (substitute)`;
+  } else {
+    return ``;
+  }
 }
 
 /** Clamp N columns to ≤max chars each, keeping the same number of rows. */

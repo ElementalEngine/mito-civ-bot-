@@ -1,4 +1,4 @@
-import type { UploadSaveResponse, OrderChangeResponse, GetMatchResponse } from "../api";
+import type { UploadSaveResponse, GetMatchResponse } from "../api";
 import { ApiClient } from "../api";
 import { downloadAttachment } from "../utils/download-attachment";
 
@@ -63,6 +63,16 @@ export async function assignDiscordId(
   api: ApiClient = new ApiClient(),
 ) : Promise<GetMatchResponse> {
   return api.assignDiscordId(matchId, playerId, playerDiscordId, discordMessageId);
+}
+
+export async function assignSub(
+  matchId: string,
+  subInId: string,
+  subOutDiscordId: string,
+  discordMessageId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<GetMatchResponse> {
+  return api.assignSub(matchId, subInId, subOutDiscordId, discordMessageId);
 }
 
 export async function approveMatch(

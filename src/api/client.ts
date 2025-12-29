@@ -1,7 +1,7 @@
 import { log } from "console";
 import { config } from "../config";
 import { ApiError } from "./errors";
-import type { UploadSaveResponse, OrderChangeResponse, GetMatchResponse } from "./types";
+import type { UploadSaveResponse, GetMatchResponse } from "./types";
 import { match } from "assert";
 
 type FetchLike = typeof fetch;
@@ -104,6 +104,21 @@ export class ApiClient {
     form.append("discord_message_id", discordMessageId);
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/assign-discord-id/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
+  async assignSub(matchId: string, subInId: string, subOutDiscordId: string, discordMessageId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    form.append("sub_in_id", subInId);
+    form.append("sub_out_discord_id", subOutDiscordId);
+    form.append("discord_message_id", discordMessageId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/assign-sub/`, {
       method: "PUT",
       body: form,
     });
