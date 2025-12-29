@@ -75,6 +75,15 @@ export async function assignSub(
   return api.assignSub(matchId, subInId, subOutDiscordId, discordMessageId);
 }
 
+export async function removeSub(
+  matchId: string,
+  subOutId: string,
+  discordMessageId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<GetMatchResponse> {
+  return api.removeSub(matchId, subOutId, discordMessageId);
+}
+
 export async function approveMatch(
   matchId: string,
   approverDiscordId: string,

@@ -126,6 +126,20 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
+  async removeSub(matchId: string, subOutId: string, discordMessageId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    form.append("sub_out_id", subOutId);
+    form.append("discord_message_id", discordMessageId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/remove-sub/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
   async approveMatch(matchId: string, approverDiscordId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);
