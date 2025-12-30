@@ -32,6 +32,30 @@ const discord = {
       process.env.CHANNEL_REALTIME_REPORTING_HISTORY_ID ?? '',
     cloudReportingHistory:
       process.env.CHANNEL_CLOUD_REPORTING_HISTORY_ID ?? '',
+    civ6RealtimeFfaLeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_FFA_LEADERBOARD_ID ?? '',
+    civ6RealtimeDuelLeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_DUEL_LEADERBOARD_ID ?? '',
+    civ6RealtimeTeamerLeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_TEAMER_LEADERBOARD_ID ?? '',
+    civ6PbcFfaLeaderboard:
+      process.env.CHANNEL_CIV6_PBC_FFA_LEADERBOARD_ID ?? '',
+    civ6PbcDuelLeaderboard:
+      process.env.CHANNEL_CIV6_PBC_DUEL_LEADERBOARD_ID ?? '',
+    civ6PbcTeamerLeaderboard:
+      process.env.CHANNEL_CIV6_PBC_TEAMER_LEADERBOARD_ID ?? '',
+    civ7RealtimeFfaLeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_FFA_LEADERBOARD_ID ?? '',
+    civ7RealtimeDuelLeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_DUEL_LEADERBOARD_ID ?? '',
+    civ7RealtimeTeamerLeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_TEAMER_LEADERBOARD_ID ?? '',
+    civ7PbcFfaLeaderboard:
+      process.env.CHANNEL_CIV7_PBC_FFA_LEADERBOARD_ID ?? '',
+    civ7PbcDuelLeaderboard:
+      process.env.CHANNEL_CIV7_PBC_DUEL_LEADERBOARD_ID ?? '',
+    civ7PbcTeamerLeaderboard:
+      process.env.CHANNEL_CIV7_PBC_TEAMER_LEADERBOARD_ID ?? '',
   },
   roles: {
     moderator: process.env.ROLE_MODERATOR!,
