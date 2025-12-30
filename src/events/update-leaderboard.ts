@@ -162,7 +162,7 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
     // console.log(`${new Date().toLocaleTimeString()} Updating leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
     await msg.edit(leaderboardMsg);
     // console.log(`${new Date().toLocaleTimeString()} Updated leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
-    await sleep(1000); // to avoid rate limits
+    await sleep(4000); // to avoid rate limits
   }
 }
 
@@ -179,7 +179,7 @@ async function updateLeaderboards(client: Client): Promise<void> {
 }
 
 export async function execute(client: Client): Promise<void> {
-  // updating leaderboards every 10 minutes
+  // updating leaderboards every hour
   updateLeaderboards(client);
-  setInterval(updateLeaderboards, 10 * 60 * 1000, client);
+  setInterval(updateLeaderboards, 60 * 60 * 1000, client);
 }
