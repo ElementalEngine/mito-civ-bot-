@@ -60,3 +60,16 @@ export type GetMatchResponse = {
   repeated: boolean;
   reporter_discord_id: string;
 }
+
+export type PlayerRanking = {
+  discord_id: string;
+  rating: number;
+  games_played: number;
+  wins: number;
+  losses: number;
+  first: string;
+}
+
+export type LeaderboardRanking = {
+  player_rankings: PlayerRanking[];
+}

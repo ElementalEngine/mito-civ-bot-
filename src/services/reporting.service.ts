@@ -1,4 +1,4 @@
-import type { UploadSaveResponse, GetMatchResponse } from "../api";
+import type { UploadSaveResponse, GetMatchResponse, LeaderboardRanking } from "../api";
 import { ApiClient } from "../api";
 import { downloadAttachment } from "../utils/download-attachment";
 
@@ -92,12 +92,13 @@ export async function approveMatch(
   return api.approveMatch(matchId, approverDiscordId);
 }
 
-export async function getLeaderboard(
+export async function getLeaderboardRanking(
   game: string,
+  gameType: string,
   gameMode: string,
   api: ApiClient = new ApiClient(),
-) : Promise<any> {
-  return api.getLeaderboard(game, gameMode);
+) : Promise<LeaderboardRanking> {
+  return api.getLeaderboardRanking(game, gameType, gameMode);
 }
 
 // Future (add here when ready):

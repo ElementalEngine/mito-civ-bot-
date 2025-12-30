@@ -1,54 +1,167 @@
 import { Events } from 'discord.js';
 import { Client, ChatInputCommandInteraction, GuildBasedChannel } from 'discord.js';
 import { config } from "../config";
+import { getLeaderboardRanking } from "../services/reporting.service";
+import { Leaderboard } from "../types/leaderboard";
 
 export const name = Events.ClientReady;
 export const once = false;
 
-const leaderboardsDict = {
-  "Civ6_PBC_FFA": config.discord.channels.civ6PbcFfaLeaderboard,
-  "Civ6_PBC_Teamer": config.discord.channels.civ6PbcTeamerLeaderboard,
-  "Civ6_PBC_Duel": config.discord.channels.civ6PbcDuelLeaderboard,
-  "Civ6_Realtime_FFA": config.discord.channels.civ6RealtimeFfaLeaderboard,
-  "Civ6_Realtime_Teamer": config.discord.channels.civ6RealtimeTeamerLeaderboard,
-  "Civ6_Realtime_Duel": config.discord.channels.civ6RealtimeDuelLeaderboard,
-  "Civ7_PBC_FFA": config.discord.channels.civ7PbcFfaLeaderboard,
-  "Civ7_PBC_Teamer": config.discord.channels.civ7PbcTeamerLeaderboard,
-  "Civ7_PBC_Duel": config.discord.channels.civ7PbcDuelLeaderboard,
-  "Civ7_Realtime_FFA": config.discord.channels.civ7RealtimeFfaLeaderboard,
-  "Civ7_Realtime_Teamer": config.discord.channels.civ7RealtimeTeamerLeaderboard,
-  "Civ7_Realtime_Duel": config.discord.channels.civ7RealtimeDuelLeaderboard,
+const civ6_pbc_ffa_leaderboard = {
+  name: "Civ6_PBC_FFA",
+  game: "civ6",
+  game_type: "PBC",
+  game_mode: "FFA",
+  thread_id: config.discord.channels.civ6PbcFfaLeaderboard
+}
+const civ6_pbc_teamer_leaderboard = {
+  name: "Civ6_PBC_Teamer",
+  game: "civ6",
+  game_type: "PBC",
+  game_mode: "Teamer",
+  thread_id: config.discord.channels.civ6PbcTeamerLeaderboard
+}
+const civ6_pbc_duel_leaderboard = {
+  name: "Civ6_PBC_Duel",
+  game: "civ6",
+  game_type: "PBC",
+  game_mode: "Duel",
+  thread_id: config.discord.channels.civ6PbcDuelLeaderboard
+}
+const civ6_realtime_ffa_leaderboard = {
+  name: "Civ6_Realtime_FFA",
+  game: "civ6",
+  game_type: "realtime",
+  game_mode: "FFA",
+  thread_id: config.discord.channels.civ6RealtimeFfaLeaderboard
+}
+const civ6_realtime_teamer_leaderboard = {
+  name: "Civ6_Realtime_Teamer",
+  game: "civ6",
+  game_type: "realtime",
+  game_mode: "Teamer",
+  thread_id: config.discord.channels.civ6RealtimeTeamerLeaderboard
+}
+const civ6__duel_leaderboard = {
+  name: "Civ6_Realtime_Duel",
+  game: "civ6",
+  game_type: "realtime",
+  game_mode: "Duel",
+  thread_id: config.discord.channels.civ6RealtimeDuelLeaderboard
+}
+const civ7_pbc_ffa_leaderboard = {
+  name: "Civ7_PBC_FFA",
+  game: "civ7",
+  game_type: "PBC",
+  game_mode: "FFA",
+  thread_id: config.discord.channels.civ7PbcFfaLeaderboard
+}
+const civ7_pbc_teamer_leaderboard = {
+  name: "Civ7_PBC_Teamer",
+  game: "civ7",
+  game_type: "PBC",
+  game_mode: "Teamer",
+  thread_id: config.discord.channels.civ7PbcTeamerLeaderboard
+}
+const civ7_pbc_duel_leaderboard = {
+  name: "Civ7_PBC_Duel",
+  game: "civ7",
+  game_type: "PBC",
+  game_mode: "Duel",
+  thread_id: config.discord.channels.civ7PbcDuelLeaderboard
+}
+const civ7_realtime_ffa_leaderboard = {
+  name: "Civ7_Realtime_FFA",
+  game: "civ7",
+  game_type: "realtime",
+  game_mode: "FFA",
+  thread_id: config.discord.channels.civ7RealtimeFfaLeaderboard
+}
+const civ7_realtime_teamer_leaderboard = {
+  name: "Civ7_Realtime_Teamer",
+  game: "civ7",
+  game_type: "realtime",
+  game_mode: "Teamer",
+  thread_id: config.discord.channels.civ7RealtimeTeamerLeaderboard
+}
+const civ7__duel_leaderboard = {
+  name: "Civ7_Realtime_Duel",
+  game: "civ7",
+  game_type: "realtime",
+  game_mode: "Duel",
+  thread_id: config.discord.channels.civ7RealtimeDuelLeaderboard
 }
 
-function getLeaderboardPost(client: Client, leaderboardId: string) {
-  const thread = client.channels.cache.get(leaderboardId) as GuildBasedChannel;
+const leaderboardsList: Leaderboard[] = [
+  civ6_pbc_ffa_leaderboard,
+  civ6_pbc_teamer_leaderboard,
+  civ6_pbc_duel_leaderboard,
+  civ6_realtime_ffa_leaderboard,
+  civ6_realtime_teamer_leaderboard,
+  civ6__duel_leaderboard,
+  civ7_pbc_ffa_leaderboard,
+  civ7_pbc_teamer_leaderboard,
+  civ7_pbc_duel_leaderboard,
+  civ7_realtime_ffa_leaderboard,
+  civ7_realtime_teamer_leaderboard,
+  civ7__duel_leaderboard
+];
+
+function getLeaderboardThread(client: Client, thread_id: string) {
+  const thread = client.channels.cache.get(thread_id) as GuildBasedChannel;
   return thread;
 }
 
-async function updateLeaderboard(client: Client, leaderboardName: string, leaderboardId: string): Promise<void> {
-  console.log(`Updating leaderboard: ${leaderboardName} with id ${leaderboardId}`);
-  var leaderboardPost = getLeaderboardPost(client, leaderboardId);
-  if (!leaderboardPost || !leaderboardPost.isTextBased()) {
+function leaderboardMessage(leaderboardRanking: any, startIdx: number, endIdx: number): string {
+  let message = ``;
+  if (startIdx === 0) {
+    message += `\`Rank  Skill\t[wins - loss]\tWin%\t1st\`\n`;
+  }
+  for (let i = startIdx; i < endIdx; i++) {
+    if (i >= leaderboardRanking.rankings.length || !leaderboardRanking.rankings[i]) {
+      message += `\`#${i + 1}\`\n`;
+      continue;
+    }
+    const entry = leaderboardRanking.rankings[i];
+    let rank = String(`#${i + 1}`).padEnd(3);
+    let discord_id = entry.discord_id;
+    let rating = `${String(entry.rating).padStart(4)}`;
+    let wins = entry.wins;
+    let losses = entry.games_played - entry.wins;
+    let win_loss_record = `[${String(wins).padStart(4)} - ${String(losses).padEnd(4)}]`;
+    let win_percentage = ((entry.wins / (entry.games_played)) * 100) as number;
+    let win_perc_str = String(win_percentage).padStart(3);
+    let number_of_first_places = String(entry.first).padStart(3);
+    message += `\`${rank}\t${rating}\t${win_loss_record}\t${win_perc_str}\%\t${number_of_first_places}\`\t<@${discord_id}>\n`;
+  }
+  return message;
+}
+
+async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Promise<void> {
+  console.log(`Updating leaderboard: ${leaderboard.name} with id ${leaderboard.thread_id}`);
+  var leaderboardThread = getLeaderboardThread(client, leaderboard.thread_id);
+  if (!leaderboardThread || !leaderboardThread.isTextBased()) {
     return;
   }
-  const rankingMessages = await leaderboardPost.messages.fetch({ limit: 100 });
+  const rankingMessages = await leaderboardThread.messages.fetch({ limit: 100 });
   var rankingMessagesArray = rankingMessages.map(m => m);
   while (rankingMessagesArray.length < 10) {
-    rankingMessagesArray.push(await leaderboardPost.send(`Placeholder for leaderboard entry.`));
+    rankingMessagesArray.push(await leaderboardThread.send(`Placeholder for leaderboard entry.`));
   }
-
-  // const leaderboard = getLeaderboard(match);
   rankingMessagesArray.reverse();
+
+  const leaderboardRanking = await getLeaderboardRanking(leaderboard.game, leaderboard.game_type, leaderboard.game_mode);
   for (var i = 0; i < rankingMessagesArray.length; i++) {
     const msg = rankingMessagesArray[i];
-    await msg.edit(`Leaderboard entry for Rank ${i * 10 + 1} - ${i * 10 + 10}...`);
+    await msg.edit(leaderboardMessage(leaderboardRanking, i * 10, i * 10 + 10));
   }
 }
 
 async function updateLeaderboards(client: Client): Promise<void> {
   try {
-    for (const leaderboard in leaderboardsDict) {
-      await updateLeaderboard(client, leaderboard, leaderboardsDict[leaderboard as keyof typeof leaderboardsDict]);
+    for (var i = 0; i < leaderboardsList.length; i++) {
+      var leaderboard = leaderboardsList[i];
+      await updateLeaderboard(client, leaderboard);
     }
     console.log("✅ Leaderboards updated successfully");
   } catch (err: any) {

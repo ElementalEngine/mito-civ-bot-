@@ -1,7 +1,7 @@
 import { log } from "console";
 import { config } from "../config";
 import { ApiError } from "./errors";
-import type { UploadSaveResponse, GetMatchResponse } from "./types";
+import type { UploadSaveResponse, GetMatchResponse, LeaderboardRanking } from "./types";
 import { match } from "assert";
 
 type FetchLike = typeof fetch;
@@ -153,17 +153,18 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
-  async getLeaderboard(game: string, gameMode: string): Promise<GetMatchResponse> {
+  async getLeaderboardRanking(game: string, gameType:string, gameMode: string): Promise<LeaderboardRanking> {
     const form = new FormData();
     form.append("game", game);
-    form.append("game_mdoe", gameMode);
+    form.append("game_type", gameType)
+    form.append("game_mode", gameMode);
 
-    const res = await this.fetchWithRetry(`${this.base}/api/v1/get-leaderboard/`, {
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/get-leaderboard-ranking/`, {
       method: "PUT",
       body: form,
     });
 
-    return (await this.parseJson(res)) as GetMatchResponse;
+    return (await this.parseJson(res)) as LeaderboardRanking;
   }
 
   private async fetchWithRetry(input: RequestInfo | URL, init?: RequestInit, attempts = 3): Promise<Response> {
