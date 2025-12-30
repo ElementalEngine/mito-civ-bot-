@@ -7,6 +7,10 @@ import { Leaderboard } from "../types/leaderboard";
 export const name = Events.ClientReady;
 export const once = false;
 
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const civ6_pbc_ffa_leaderboard = {
   name: "Civ6_PBC_FFA",
   game: "civ6",
@@ -93,18 +97,18 @@ const civ7__duel_leaderboard = {
 }
 
 const leaderboardsList: Leaderboard[] = [
-  civ6_pbc_ffa_leaderboard,
-  civ6_pbc_teamer_leaderboard,
-  civ6_pbc_duel_leaderboard,
   civ6_realtime_ffa_leaderboard,
   civ6_realtime_teamer_leaderboard,
   civ6__duel_leaderboard,
+  civ6_pbc_ffa_leaderboard,
+  civ6_pbc_teamer_leaderboard,
+  civ6_pbc_duel_leaderboard,
+  civ7_realtime_ffa_leaderboard,
+  civ7_realtime_teamer_leaderboard,
+  civ7__duel_leaderboard,
   civ7_pbc_ffa_leaderboard,
   civ7_pbc_teamer_leaderboard,
   civ7_pbc_duel_leaderboard,
-  civ7_realtime_ffa_leaderboard,
-  civ7_realtime_teamer_leaderboard,
-  civ7__duel_leaderboard
 ];
 
 function getLeaderboardThread(client: Client, thread_id: string) {
@@ -112,7 +116,7 @@ function getLeaderboardThread(client: Client, thread_id: string) {
   return thread;
 }
 
-function leaderboardMessage(leaderboardRanking: any, startIdx: number, endIdx: number): string {
+function getLeaderboardMessage(leaderboardRanking: any, startIdx: number, endIdx: number): string {
   let message = ``;
   if (startIdx === 0) {
     message += `\`Rank  Skill\t[wins - loss]\tWin%\t1st\`\n`;
@@ -143,7 +147,8 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
   if (!leaderboardThread || !leaderboardThread.isTextBased()) {
     return;
   }
-  const rankingMessages = await leaderboardThread.messages.fetch({ limit: 100 });
+  const rankingMessages = await leaderboardThread.messages.fetch({ limit: 10 });
+  await sleep(10000); // to avoid rate limits
   var rankingMessagesArray = rankingMessages.map(m => m);
   while (rankingMessagesArray.length < 10) {
     rankingMessagesArray.push(await leaderboardThread.send(`Placeholder for leaderboard entry.`));
@@ -153,7 +158,11 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
   const leaderboardRanking = await getLeaderboardRanking(leaderboard.game, leaderboard.game_type, leaderboard.game_mode);
   for (var i = 0; i < rankingMessagesArray.length; i++) {
     const msg = rankingMessagesArray[i];
-    await msg.edit(leaderboardMessage(leaderboardRanking, i * 10, i * 10 + 10));
+    const leaderboardMsg = getLeaderboardMessage(leaderboardRanking, i * 10, i * 10 + 10);
+    // console.log(`${new Date().toLocaleTimeString()} Updating leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
+    await msg.edit(leaderboardMsg);
+    // console.log(`${new Date().toLocaleTimeString()} Updated leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
+    await sleep(1000); // to avoid rate limits
   }
 }
 
@@ -170,6 +179,7 @@ async function updateLeaderboards(client: Client): Promise<void> {
 }
 
 export async function execute(client: Client): Promise<void> {
-  // updating leaderboards every 5 minutes
-  setInterval(updateLeaderboards, 5 * 60 * 1000, client);
+  // updating leaderboards every 10 minutes
+  updateLeaderboards(client);
+  setInterval(updateLeaderboards, 10 * 60 * 1000, client);
 }
