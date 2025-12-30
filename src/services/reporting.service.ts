@@ -92,6 +92,14 @@ export async function approveMatch(
   return api.approveMatch(matchId, approverDiscordId);
 }
 
+export async function getLeaderboard(
+  game: string,
+  gameMode: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<any> {
+  return api.getLeaderboard(game, gameMode);
+}
+
 // Future (add here when ready):
 // export async function confirmMatch(...) { ... }
 // export async function flagMatch(...) { ... }
