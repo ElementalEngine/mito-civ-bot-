@@ -158,7 +158,7 @@ export class ApiClient {
     form.append("game", game);
     form.append("game_mdoe", gameMode);
 
-    const res = await this.fetchWithRetry(`${this.base}/api/v1/approve-match/`, {
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/get-leaderboard/`, {
       method: "PUT",
       body: form,
     });
