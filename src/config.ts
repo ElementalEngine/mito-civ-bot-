@@ -32,29 +32,41 @@ const discord = {
       process.env.CHANNEL_REALTIME_REPORTING_HISTORY_ID ?? '',
     cloudReportingHistory:
       process.env.CHANNEL_CLOUD_REPORTING_HISTORY_ID ?? '',
-    civ6RealtimeFfaLeaderboard:
+    civ6RealtimeFFALeaderboard:
       process.env.CHANNEL_CIV6_REALTIME_FFA_LEADERBOARD_ID ?? '',
     civ6RealtimeDuelLeaderboard:
       process.env.CHANNEL_CIV6_REALTIME_DUEL_LEADERBOARD_ID ?? '',
     civ6RealtimeTeamerLeaderboard:
       process.env.CHANNEL_CIV6_REALTIME_TEAMER_LEADERBOARD_ID ?? '',
-    civ6PbcFfaLeaderboard:
+    civ6RealtimeSeasonalFFALeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_SEASONAL_FFA_LEADERBOARD_ID ?? '',
+    civ6RealtimeSeasonalDuelLeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_SEASONAL_DUEL_LEADERBOARD_ID ?? '',
+    civ6RealtimeSeasonalTeamerLeaderboard:
+      process.env.CHANNEL_CIV6_REALTIME_SEASONAL_TEAMER_LEADERBOARD_ID ?? '',
+    civ6PBCFFALeaderboard:
       process.env.CHANNEL_CIV6_PBC_FFA_LEADERBOARD_ID ?? '',
-    civ6PbcDuelLeaderboard:
+    civ6PBCDuelLeaderboard:
       process.env.CHANNEL_CIV6_PBC_DUEL_LEADERBOARD_ID ?? '',
-    civ6PbcTeamerLeaderboard:
+    civ6PBCTeamerLeaderboard:
       process.env.CHANNEL_CIV6_PBC_TEAMER_LEADERBOARD_ID ?? '',
-    civ7RealtimeFfaLeaderboard:
+    civ7RealtimeFFALeaderboard:
       process.env.CHANNEL_CIV7_REALTIME_FFA_LEADERBOARD_ID ?? '',
     civ7RealtimeDuelLeaderboard:
       process.env.CHANNEL_CIV7_REALTIME_DUEL_LEADERBOARD_ID ?? '',
     civ7RealtimeTeamerLeaderboard:
       process.env.CHANNEL_CIV7_REALTIME_TEAMER_LEADERBOARD_ID ?? '',
-    civ7PbcFfaLeaderboard:
+    civ7RealtimeSeasonalFFALeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_SEASONAL_FFA_LEADERBOARD_ID ?? '',
+    civ7RealtimeSeasonalDuelLeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_SEASONAL_DUEL_LEADERBOARD_ID ?? '',
+    civ7RealtimeSeasonalTeamerLeaderboard:
+      process.env.CHANNEL_CIV7_REALTIME_SEASONAL_TEAMER_LEADERBOARD_ID ?? '',
+    civ7PBCFFALeaderboard:
       process.env.CHANNEL_CIV7_PBC_FFA_LEADERBOARD_ID ?? '',
-    civ7PbcDuelLeaderboard:
+    civ7PBCDuelLeaderboard:
       process.env.CHANNEL_CIV7_PBC_DUEL_LEADERBOARD_ID ?? '',
-    civ7PbcTeamerLeaderboard:
+    civ7PBCTeamerLeaderboard:
       process.env.CHANNEL_CIV7_PBC_TEAMER_LEADERBOARD_ID ?? '',
   },
   roles: {

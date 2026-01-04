@@ -96,9 +96,10 @@ export async function getLeaderboardRanking(
   game: string,
   gameType: string,
   gameMode: string,
+  isSeasonal: boolean,
   api: ApiClient = new ApiClient(),
 ) : Promise<LeaderboardRanking> {
-  return api.getLeaderboardRanking(game, gameType, gameMode);
+  return api.getLeaderboardRanking(game, gameType, gameMode, isSeasonal);
 }
 
 // Future (add here when ready):

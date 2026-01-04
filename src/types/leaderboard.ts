@@ -3,5 +3,6 @@ export type Leaderboard = {
   game: string;
   game_type: string;
   game_mode: string;
+  is_seasonal: boolean;
   thread_id: string;
 };

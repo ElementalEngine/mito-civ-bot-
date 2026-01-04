@@ -34,12 +34,13 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   const isCiv6 = game === "civ6";
   const modeStr = ("game_mode" in report && report.game_mode ? String(report.game_mode) : "").toLowerCase();
   const isTeamMode = modeStr.includes("team");
+  const gameModeStr = modeStr == "teamer" ? "Teamer" : modeStr == "duel" ? "Duel" : "FFA";
 
   // Meta
   const meta: string[] = [];
   if (opts.header) meta.push(opts.header);
   meta.push(`Game: **${report.game}**`);
-  if ("game_mode" in report && report.game_mode) meta.push(`Mode: **${report.game_mode}**`);
+  if ("game_mode" in report && report.game_mode) meta.push(`Mode: **${gameModeStr}**`);
   if ("turn" in report && typeof report.turn === "number") meta.push(`Turn: **${report.turn}**`);
   if ("age" in (report as any) && (report as any).age) meta.push(`Age: **${(report as any).age}**`);
   if ("map_type" in report && report.map_type) meta.push(`Map: **${report.map_type}**`);
@@ -81,7 +82,12 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       for (const p of t.members) {
         const pos = (placement(p) ?? t.members.indexOf(p));
         idColumn.push(`${report.players.indexOf(p) + 1}`);
-        rankColumn.push(`${fmtDelta(delta(p))}`);
+        var rankValue = `${fmtDelta(delta(p))}`;
+        if (p.season_delta) {
+          var seasonRankValue = fmtDelta(p.season_delta);
+          rankValue += ` (${seasonRankValue})`;
+        }
+        rankColumn.push(rankValue);
         nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
       }
     });
@@ -91,7 +97,13 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       const p = players[i];
       const pos = (placement(p) ?? i);
       idColumn.push(`${report.players.indexOf(p) + 1}`);
-      rankColumn.push(`${rankToken(pos)} ${fmtDelta(delta(p))}`);
+      var rankValue = `${rankToken(pos)} ${fmtDelta(delta(p))}`.padEnd(10);
+      if (p.season_delta) {
+        var seasonRankValue = fmtDelta(p.season_delta);
+        rankValue += `(${seasonRankValue})`.padStart(10);
+      }
+      rankValue = `\`${rankValue}\``;
+      rankColumn.push(rankValue);
       nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
     }
   }
@@ -112,7 +124,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
     .addFields(
       { name: "Host", value: (opts.host ?? "—") || "—", inline: false },
       { name: "ID", value: columnsStr.str[0] || "—", inline: true },
-      { name: "Placement / ΔELO", value: columnsStr.str[1] || "—", inline: true },
+      { name: "Rank / ΔELO (Seasonal)", value: columnsStr.str[1] || "—", inline: true },
       { name: "Players / Civ / Leader", value: columnsStr.str[2] || "—", inline: true },
     )
     .setFooter({ text: footerLines.join("\n") });
@@ -149,7 +161,7 @@ function numRank(pos: number): string {
 }
 function fmtDelta(d: number): string {
   const s = (d >= 0 ? `+${d}` : `${d}`).padStart(3, " ");
-  return `[ ${s}]`;
+  return `[${s}]`;
 }
 /** Mention if we have a discord id; otherwise @username */
 function who(p: ParsedPlayer): string {

@@ -38,7 +38,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  var deferedReply = await interaction.deferReply({
+    flags: MessageFlags.Ephemeral,
+  });
 
   try {
     await interaction.editReply(`Deleting report...`);
@@ -64,6 +66,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         setTimeout(() => repliedMessage.delete(), 10 * 60 * 1000);
       })
       .catch();
+    deferedReply.delete();
 
     for (var msg in res.discord_messages_id_list) {
       try {
