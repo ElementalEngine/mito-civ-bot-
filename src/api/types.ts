@@ -11,6 +11,7 @@ export type ParsedPlayer = {
   placement: number;
   quit: boolean;
   delta?: number;
+  season_delta?: number;
   is_sub: boolean;
   subbed_out: boolean;
 };
