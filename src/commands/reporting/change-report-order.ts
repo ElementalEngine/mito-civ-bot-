@@ -50,6 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({
     flags: MessageFlags.Ephemeral,
   });
+  var interactionReply;
 
   try {
     await interaction.editReply(`Processing change report order request...`);
@@ -68,7 +69,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `Match ID: **${matchId}**\n`;
     const playerListMessage = `Players: ` + getPlayerListMessage(getMatchRes, newOrder);
     const changingOrderMsg = header + playerListMessage;
-    const interactionReply = await interaction.followUp({ content: changingOrderMsg });
+    interactionReply = await interaction.followUp({ content: changingOrderMsg });
     const changingOrderMsgId = interactionReply.id;
     const res = await setPlacements(matchId, newOrder, changingOrderMsgId);
 
@@ -88,6 +89,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     interaction.editReply({ content: `${EMOJI_CONFIRM} Change report order successful!` });
 
   } catch (err: any) {
+    if (interactionReply) {
+      interactionReply.delete();
+    }
     const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
     await interaction.editReply(`${EMOJI_FAIL} Change report order failed: ${msg}`)
       .then(repliedMessage => {

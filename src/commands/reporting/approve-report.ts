@@ -53,10 +53,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
     const res = await approveMatch(matchId, interaction.user.id);
     var historyChannelId;
-    if ((res as BaseReport).is_cloud) {
-      historyChannelId = config.discord.channels.cloudReportingHistory;
+    if (interaction.channelId == config.discord.channels.civ6realtimeUploads) {
+      historyChannelId = config.discord.channels.civ6realtimeReportingHistory;
+    } else if (interaction.channelId == config.discord.channels.civ6cloudUploads) {
+      historyChannelId = config.discord.channels.civ6cloudReportingHistory;
+    } else if (interaction.channelId == config.discord.channels.civ7realtimeUploads) {
+      historyChannelId = config.discord.channels.civ7realtimeReportingHistory;
+    } else if (interaction.channelId == config.discord.channels.civ7cloudUploads) {
+      historyChannelId = config.discord.channels.civ7cloudReportingHistory;
     } else {
-      historyChannelId = config.discord.channels.realtimeReportingHistory;
+      await interaction.editReply(`${EMOJI_FAIL} This command can only be used in the designated reporting channels.`);
+      return;
     }
     const historyChannel = interaction.guild?.channels.cache.get(historyChannelId);
     if (!historyChannel || !historyChannel.isTextBased()) {

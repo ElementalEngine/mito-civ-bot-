@@ -75,6 +75,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
     const subInPlayer = getMatchRes?.players[subInPlayerIndex];
+    if (subInPlayer.is_sub || subInPlayer.subbed_out) {
+      await interaction.editReply(`${EMOJI_FAIL} Player already a sub assigned. Multiple subs is not allowed.`)
+        .then(repliedMessage => {
+            setTimeout(() => repliedMessage.delete(), 60 * 1000);
+          })
+        .catch();
+      return;
+    }
     const assignSubMsg = await interaction.editReply(`Assigning substitute...\nSUB IN:<@${subInPlayer.discord_id}>\nSUB OUT:<@${subOutDiscordID}>`);
     const res = await assignSub(matchId, subInPlayerIndex.toString(), subOutDiscordID, assignSubMsg.id);
 

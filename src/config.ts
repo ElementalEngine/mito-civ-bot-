@@ -24,14 +24,22 @@ const discord = {
   channels: {
     botTesting: 
       process.env.CHANNEL_BOT_COMMANDS_ID!,
-    realtimeUploads:
-      process.env.CHANNEL_REALTIME_UPLOADS_ID ?? '',
-    cloudUploads:
-      process.env.CHANNEL_CLOUD_UPLOADS_ID ?? '',
-    realtimeReportingHistory:
-      process.env.CHANNEL_REALTIME_REPORTING_HISTORY_ID ?? '',
-    cloudReportingHistory:
-      process.env.CHANNEL_CLOUD_REPORTING_HISTORY_ID ?? '',
+    civ6realtimeUploads:
+      process.env.CHANNEL_CIV6_REALTIME_UPLOADS_ID ?? '',
+    civ7realtimeUploads:
+      process.env.CHANNEL_CIV7_REALTIME_UPLOADS_ID ?? '',
+    civ6cloudUploads:
+      process.env.CHANNEL_CIV6_CLOUD_UPLOADS_ID ?? '',
+    civ7cloudUploads:
+      process.env.CHANNEL_CIV7_CLOUD_UPLOADS_ID ?? '',
+    civ6realtimeReportingHistory:
+      process.env.CHANNEL_CIV6_REALTIME_REPORTING_HISTORY_ID ?? '',
+    civ7realtimeReportingHistory:
+      process.env.CHANNEL_CIV7_REALTIME_REPORTING_HISTORY_ID ?? '',
+    civ6cloudReportingHistory:
+      process.env.CHANNEL_CIV6_CLOUD_REPORTING_HISTORY_ID ?? '',
+    civ7cloudReportingHistory:
+      process.env.CHANNEL_CIV7_CLOUD_REPORTING_HISTORY_ID ?? '',
     civ6RealtimeFFALeaderboard:
       process.env.CHANNEL_CIV6_REALTIME_FFA_LEADERBOARD_ID ?? '',
     civ6RealtimeDuelLeaderboard:

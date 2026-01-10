@@ -21,24 +21,6 @@ import type { UploadSaveResponse } from "../../api/types";
 export const data = new SlashCommandBuilder()
   .setName("report-game")
   .setDescription("Validate the channel & save, then upload to the reporter backend.")
-  .addStringOption(option =>
-    option.setName("game-mode")
-      .setDescription("Real-time or Cloud")
-      .addChoices(
-        { name: "Real-time", value: "realtime" },
-        { name: "Cloud", value: "cloud" },
-      )
-      .setRequired(true),
-  )
-  .addStringOption(option =>
-    option.setName("game-edition")
-      .setDescription("Which Civilization edition")
-      .addChoices(
-        { name: "Civilization VI (.Civ6Save)", value: "CIV6" },
-        { name: "Civilization VII (.Civ7Save)", value: "CIV7" },
-      )
-      .setRequired(true),
-  )
   .addAttachmentOption(option =>
     option.setName("game-save")
       .setDescription("Upload the .Civ6Save or .Civ7Save file (≤7MB)")
@@ -56,29 +38,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const mode = interaction.options.getString("game-mode", true) as GameMode;
-  const edition = interaction.options.getString("game-edition", true) as CivEdition;
   const save = interaction.options.getAttachment("game-save", true);
 
-  const realtimeChannelId = config.discord.channels.realtimeUploads;
-  const cloudChannelId = config.discord.channels.cloudUploads;
-  const expectedChannelId = mode === "realtime" ? realtimeChannelId : cloudChannelId;
+  const civ6realtimeChannelId = config.discord.channels.civ6realtimeUploads;
+  const civ7realtimeChannelId = config.discord.channels.civ7realtimeUploads;
+  const civ6cloudChannelId = config.discord.channels.civ6cloudUploads;
+  const civ7cloudChannelId = config.discord.channels.civ7cloudUploads;
+  const edition = interaction.channelId === civ6realtimeChannelId || interaction.channelId === civ6cloudChannelId
+    ? "CIV6"
+    : "CIV7";
+  const mode = interaction.channelId === civ6realtimeChannelId || interaction.channelId === civ7realtimeChannelId
+    ? "realtime"
+    : "cloud";
 
   const errors: string[] = [];
-
-  if (!expectedChannelId) {
-    errors.push(
-      mode === "realtime"
-        ? "Real-time uploads channel is not configured."
-        : "Cloud uploads channel is not configured.",
-    );
-  } else if (interaction.channelId !== expectedChannelId) {
-    errors.push(
-      mode === "realtime"
-        ? "Wrong channel for **Real-time**. Use the designated Real-time uploads channel."
-        : "Wrong channel for **Cloud**. Use the designated Cloud uploads channel.",
-    );
-  }
 
   try {
     validateSaveAttachment(save, edition);
@@ -124,12 +97,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       reporterId: interaction.user.id,
       // host: userMention(interaction.user.id), // prefill if desired later
     });
-    const embedMsg = await interaction.editReply({
+    await interaction.editReply({
       embeds: [embed],
     });
-
-    await embedMsg.react("✅");
-    await embedMsg.react("❌");
 
     // Ping message
     const header =

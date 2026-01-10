@@ -98,7 +98,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       const pos = (placement(p) ?? i);
       idColumn.push(`${report.players.indexOf(p) + 1}`);
       var rankValue = `${rankToken(pos)} ${fmtDelta(delta(p))}`.padEnd(10);
-      if (p.season_delta) {
+      if (p.season_delta !== undefined) {
         var seasonRankValue = fmtDelta(p.season_delta);
         rankValue += `(${seasonRankValue})`.padStart(10);
       }
@@ -107,6 +107,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
     }
   }
+  const embedColor = getEmbedColor(report);
 
   // Clamp all three columns together so they fit 1024 chars each
   const columnsStr  = clampNColumns([idColumn, rankColumn, nameCivLeaderColumn], 1024);
@@ -121,6 +122,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   return new EmbedBuilder()
     .setTitle(`${EMOJI_REPORT} Match Report`)
     .setDescription(description || "—")
+    .setColor(embedColor)
     .addFields(
       { name: "Host", value: (opts.host ?? "—") || "—", inline: false },
       { name: "ID", value: columnsStr.str[0] || "—", inline: true },
@@ -132,6 +134,15 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
 
 /* ───────────── helpers ───────────── */
 
+function getEmbedColor(report: AnyReport): number {
+  for (const p of report.players) {
+    if ((p as any).discord_id == null || (p as any).discord_id === undefined) {
+      // returning red color
+      return 0xFF0000;
+    }
+  }
+  return 0x00FF00;
+}
 function placement(p: ParsedPlayer): number | undefined {
   const v = (p as any).placement;
   return typeof v === "number" ? v + 1 : undefined;

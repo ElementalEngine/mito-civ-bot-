@@ -9,7 +9,7 @@ import { deletePendingMatch, getMatch } from "../../services/reporting.service";
 import { getPlayerListMessage } from "../../utils/convert-match-to-str";
 
 export const data = new SlashCommandBuilder()
-  .setName("delete-match")
+  .setName("remove-match")
   .setDescription("Removes a match report from the database.")
   .addStringOption(option =>
     option.setName("match-id")
