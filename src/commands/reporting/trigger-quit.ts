@@ -51,6 +51,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
+    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
     const triggerQuitMsg = await interaction.editReply(`Processing trigger quit request for <@${quitterDiscordId}>...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       const getMatchRes = await getMatch(matchId);

@@ -56,6 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
+    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
     const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id request for <@${playerDiscordId}>...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`)

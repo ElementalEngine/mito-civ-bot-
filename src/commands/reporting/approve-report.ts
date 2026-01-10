@@ -47,6 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   try {
+    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can approve a report`);
       return;

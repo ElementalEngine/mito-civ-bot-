@@ -50,6 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   try {
     const getMatchRes = await getMatch(matchId);
+    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
     if (getMatchRes?.reporter_discord_id != interaction.user.id &&
         !interaction.member.roles.cache.has(config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can assign subs`)
