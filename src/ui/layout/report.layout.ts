@@ -1,5 +1,5 @@
 import { EmbedBuilder, userMention } from "discord.js";
-import type { BaseReport, BasePlayer } from "../../types/reports";
+import type { BaseReport } from "../../types/reports";
 import type { UploadSaveResponse, ParsedPlayer } from "../../api/types";
 import { lookupCiv6Leader, lookupCiv7Civ, lookupCiv7Leader } from "../../data";
 import {
