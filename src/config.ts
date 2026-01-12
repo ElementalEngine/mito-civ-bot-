@@ -94,7 +94,6 @@ export const config = {
   discord,
   host: process.env.HOST!,
   port: Number(process.env.PORT!),
-  mongoDb: process.env.MONGODB_URL!,
   backend: {
     /** Python-reporting API */
     url: process.env.BACKEND_URL || 'http://localhost:8000',
