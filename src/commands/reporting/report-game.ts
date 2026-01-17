@@ -23,7 +23,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Validate the channel & save, then upload to the reporter backend.")
   .addAttachmentOption(option =>
     option.setName("game-save")
-      .setDescription("Upload the .Civ6Save or .Civ7Save file (≤7MB)")
+      .setDescription("Upload the .Civ6Save or .Civ7Save file (≤12MB)")
       .setRequired(true),
   );
 
