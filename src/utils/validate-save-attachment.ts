@@ -11,7 +11,7 @@ export function validateSaveAttachment(attachment: Attachment, edition: CivEditi
     throw new Error('Empty file. Please upload a valid save.');
   }
   if (attachment.size > CIV_SAVE.MAX_BYTES) {
-    throw new Error('Your save file is too large. Please upload a file under 7MB.');
+    throw new Error('Your save file is too large. Please upload a file under 12MB.');
   }
   const name = (attachment.name ?? '').trim().toLowerCase(); // handles stray spaces
   const ext = expectedExt(edition);

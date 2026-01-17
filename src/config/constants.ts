@@ -26,7 +26,7 @@ export const CIV_SAVE = {
     CIV6: '.civ6save',
     CIV7: '.civ7save',
   },
-  MAX_BYTES: 7 * 1024 * 1024, // 7 MB
+  MAX_BYTES: 12 * 1024 * 1024, // 12 MB
 } as const;
 
 export type CivEdition = keyof typeof CIV_SAVE.EXT; // 'CIV6' | 'CIV7'
