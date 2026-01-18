@@ -61,8 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.editReply(`${EMOJI_FAIL} Only original reporter <@${getMatchRes?.reporter_discord_id}> or a moderator can change report order`);
       return;
     }
-    var isModerator = interaction.member.roles.cache.has(config.discord.roles.moderator);
-    if (isValidOrder(newOrder, getMatchRes.players, isModerator) === false) {
+    if (isValidOrder(newOrder, getMatchRes.players) === false) {
       await interaction.editReply(`${EMOJI_FAIL} The new order provided is invalid. Or you do not have permission to set a order with tie positions.`);
       return;
     }
