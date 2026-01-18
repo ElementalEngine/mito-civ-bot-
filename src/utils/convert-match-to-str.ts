@@ -1,7 +1,7 @@
 import { BaseReport, Civ6Report, Civ7Report } from "../types/reports.js";
 import {ParsedPlayer} from "../api/types"
 
-export function isValidOrder(new_order: string, players: ParsedPlayer[]): boolean {
+export function isValidOrder(new_order: string, players: ParsedPlayer[], is_moderator: boolean): boolean {
   let order = new_order.split(" ").map(id => parseInt(id));
   let num_players = players.map(p => p.team);
   let unique_teams = new Set(num_players);
@@ -9,10 +9,12 @@ export function isValidOrder(new_order: string, players: ParsedPlayer[]): boolea
   if (order.length !== num_teams) {
     return false;
   }
-  let order_set = new Set(order);
-  for (var i = 1; i <= num_teams; i++) {
-    if (!order_set.has(i)) {
-      return false;
+  if (!is_moderator) {
+    let order_set = new Set(order);
+    for (var i = 1; i <= num_teams; i++) {
+      if (!order_set.has(i)) {
+        return false;
+      }
     }
   }
   return true;
@@ -21,7 +23,7 @@ export function isValidOrder(new_order: string, players: ParsedPlayer[]): boolea
 export function getPlayerListMessage(match: BaseReport, new_order: string = "", sep: string = "\t\t"): string {
   let playersSortedByPlacement = [];
   if (new_order != "") {
-    if (isValidOrder(new_order, match.players)) {
+    if (isValidOrder(new_order, match.players, true)) {
       let new_order_players = new_order.split(" ").map(id => parseInt(id));
       playersSortedByPlacement = [];
       for (const id of new_order_players) {
