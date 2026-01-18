@@ -6,7 +6,7 @@ import {
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { getMatch, removeSub } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { buildReportEmbed } from "../../ui/report.layout";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
 
 import type { BaseReport } from "../../types/reports";

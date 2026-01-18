@@ -6,7 +6,7 @@ import {
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants";
 import { setPlacements, getMatch } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { buildReportEmbed } from "../../ui/report.layout";
 import { getPlayerListMessage, isValidOrder } from "../../utils/convert-match-to-str";
 
 import type { BaseReport } from "../../types/reports";
