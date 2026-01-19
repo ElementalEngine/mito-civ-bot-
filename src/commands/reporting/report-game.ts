@@ -95,7 +95,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Build and send a SINGLE compact embed based on returned data
     const embed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
-      // host: userMention(interaction.user.id), // prefill if desired later
     });
     await interaction.editReply({
       embeds: [embed],
