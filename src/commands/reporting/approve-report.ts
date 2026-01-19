@@ -73,7 +73,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     const playerList = getPlayerListMessage(res, "", "\t");
-    const embed = buildReportEmbed(res);
+    const embed = buildReportEmbed(res, {
+      approverId: interaction.user.id,
+      isFinal: true
+    });
     await historyChannel.send({
       content: playerList,
       embeds: [embed] 

@@ -16,9 +16,10 @@ type AnyReport = UploadSaveResponse | BaseReport;
 type BuildOpts = {
   header?: string;
   reporterId?: string;
+  approverId?: string;
   apiMs?: number;
   now?: Date;
-  host?: string | null; // blank by default ("—")
+  isFinal?: boolean;
 };
 
 const MEDAL_BY_POS: Record<number, string> = {
@@ -44,7 +45,12 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   if ("turn" in report && typeof report.turn === "number") meta.push(`Turn: **${report.turn}**`);
   if ("age" in (report as any) && (report as any).age) meta.push(`Age: **${(report as any).age}**`);
   if ("map_type" in report && report.map_type) meta.push(`Map: **${report.map_type}**`);
-  const description = meta.join(" • ");
+  const matchDetailsLines = [
+    `• MatchID: ${("match_id" in report && report.match_id) ? report.match_id : "—"}`,
+  ];
+  if (opts.reporterId) matchDetailsLines.push(`• Reporter: <@${opts.reporterId}>`);
+  if (opts.approverId) matchDetailsLines.push(`• Approved by: <@${opts.approverId}>`);
+  const description = meta.join(" • ") + "\n" + matchDetailsLines.join("\n");
 
   // Players sorted by placement
   const players = [...report.players] as ParsedPlayer[];
@@ -112,24 +118,22 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   // Clamp all three columns together so they fit 1024 chars each
   const columnsStr  = clampNColumns([idColumn, rankColumn, nameCivLeaderColumn], 1024);
 
-  // Footer (bulleted; no embed timestamp)
-  const footerLines = [
-    `• MatchID: ${("match_id" in report && report.match_id) ? report.match_id : "—"}`,
-  ];
-  if (opts.reporterId) footerLines.push(`• ReporterID: ${opts.reporterId}`);
-  footerLines.push(`• ${formatTodayAt(now)}`);
+  const currentTime = Math.floor(Date.now() / 1000);
 
   return new EmbedBuilder()
     .setTitle(`${EMOJI_REPORT} Match Report`)
     .setDescription(description || "—")
     .setColor(embedColor)
     .addFields(
-      { name: "Host", value: (opts.host ?? "—") || "—", inline: false },
       { name: "ID", value: columnsStr.str[0] || "—", inline: true },
       { name: "Rank / ΔELO (Seasonal)", value: columnsStr.str[1] || "—", inline: true },
       { name: "Players / Civ / Leader", value: columnsStr.str[2] || "—", inline: true },
     )
-    .setFooter({ text: footerLines.join("\n") });
+    .addFields({
+        name: opts.isFinal ? "Approved At" : "Last Changed At",
+        value: `<t:${currentTime}:F>`,
+        inline: false
+    });
 }
 
 /* ───────────── helpers ───────────── */
@@ -228,17 +232,3 @@ function clampNColumns(
   return { str: [] };
 }
 
-function formatTodayAt(d: Date): string {
-  const now = new Date();
-  const same = d.toDateString() === now.toDateString();
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  return same
-    ? `Today at ${time}`
-    : d.toLocaleString([], {
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-}
