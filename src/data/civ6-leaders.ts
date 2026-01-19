@@ -87,7 +87,14 @@ export const CIV6_LEADERS = Object.freeze({
   LEADER_SUK_AL_HASAN: 'AlHasan',
 } as const);
 
+export const CIV6_LEADER_EMOJI_IDS: Readonly<Partial<Record<Civ6LeaderEmojiName, string>>> =
+  Object.freeze({
+    // Example:
+    // AmericaAbrahamLincoln: '1371955417097306222',
+  });
+
 export type Civ6LeaderKey = keyof typeof CIV6_LEADERS;
+export type Civ6LeaderEmojiName = (typeof CIV6_LEADERS)[Civ6LeaderKey];
 
 export const lookupCiv6Leader = (key: string): string =>
   CIV6_LEADERS[key as Civ6LeaderKey] ?? key;
