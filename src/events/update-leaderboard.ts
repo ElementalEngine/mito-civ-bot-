@@ -47,11 +47,11 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
   if (!leaderboardThread || !leaderboardThread.isTextBased()) {
     return;
   }
-  const rankingMessages = await leaderboardThread.messages.fetch({ limit: 10 });
+  const rankingMessages = (await leaderboardThread.messages.fetch({ limit: 10 })).filter(m => m.author.bot);
   await sleep(10000); // to avoid rate limits
   var rankingMessagesArray = rankingMessages.map(m => m);
   while (rankingMessagesArray.length < 10) {
-    rankingMessagesArray.push(await leaderboardThread.send(`Placeholder for leaderboard entry.`));
+    rankingMessagesArray.splice(0, 0, await leaderboardThread.send(`Placeholder for leaderboard entry.`));
     await sleep(2000); // to avoid rate limits
   }
   rankingMessagesArray.reverse();
