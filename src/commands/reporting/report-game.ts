@@ -8,7 +8,7 @@ import { config } from "../../config";
 import { validateSaveAttachment } from "../../utils/validate-save-attachment";
 import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
 import { submitSaveForReport, appendMessageIdList } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/layout/report.layout";
+import { buildReportEmbed } from "../../ui/report.layout";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
 import {
