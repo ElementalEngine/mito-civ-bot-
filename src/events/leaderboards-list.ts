@@ -28,6 +28,15 @@ const civ6_pbc_duel_leaderboard = {
   is_combined: false,
   thread_id: config.discord.channels.civ6PBCDuelLeaderboard,
 };
+const civ6_pbc_combined_leaderboard = {
+  name: 'Civ6_PBC_Combined',
+  game: 'civ6',
+  game_type: 'PBC',
+  game_mode: 'combined',
+  is_seasonal: false,
+  is_combined: true,
+  thread_id: config.discord.channels.civ6PBCCombinedLeaderboard,
+};
 const civ6_realtime_ffa_leaderboard = {
   name: 'Civ6_Realtime_FFA',
   game: 'civ6',
@@ -81,6 +90,15 @@ const civ7_pbc_duel_leaderboard = {
   is_seasonal: false,
   is_combined: false,
   thread_id: config.discord.channels.civ7PBCDuelLeaderboard,
+};
+const civ7_pbc_combined_leaderboard = {
+  name: 'Civ7_PBC_Combined',
+  game: 'civ7',
+  game_type: 'PBC',
+  game_mode: 'combined',
+  is_seasonal: false,
+  is_combined: true,
+  thread_id: config.discord.channels.civ7PBCCombinedLeaderboard,
 };
 const civ7_realtime_ffa_leaderboard = {
   name: 'Civ7_Realtime_FFA',
@@ -166,10 +184,12 @@ export const leaderboardsList: Leaderboard[] = [
   civ6_pbc_ffa_leaderboard,
   civ6_pbc_teamer_leaderboard,
   civ6_pbc_duel_leaderboard,
+  civ6_pbc_combined_leaderboard,
   civ7_realtime_ffa_leaderboard,
   civ7_realtime_teamer_leaderboard,
   civ7_realtime_duel_leaderboard,
   civ7_pbc_ffa_leaderboard,
   civ7_pbc_teamer_leaderboard,
   civ7_pbc_duel_leaderboard,
+  civ7_pbc_combined_leaderboard,
 ];

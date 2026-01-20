@@ -58,6 +58,8 @@ const discord = {
       process.env.CHANNEL_CIV6_PBC_DUEL_LEADERBOARD_ID ?? '',
     civ6PBCTeamerLeaderboard:
       process.env.CHANNEL_CIV6_PBC_TEAMER_LEADERBOARD_ID ?? '',
+    civ6PBCCombinedLeaderboard:
+      process.env.CHANNEL_CIV6_PBC_COMBINED_LEADERBOARD_ID ?? '',
     civ7RealtimeFFALeaderboard:
       process.env.CHANNEL_CIV7_REALTIME_FFA_LEADERBOARD_ID ?? '',
     civ7RealtimeDuelLeaderboard:
@@ -76,6 +78,8 @@ const discord = {
       process.env.CHANNEL_CIV7_PBC_DUEL_LEADERBOARD_ID ?? '',
     civ7PBCTeamerLeaderboard:
       process.env.CHANNEL_CIV7_PBC_TEAMER_LEADERBOARD_ID ?? '',
+    civ7PBCCombinedLeaderboard:
+      process.env.CHANNEL_CIV7_PBC_COMBINED_LEADERBOARD_ID ?? '',
   },
   roles: {
     moderator: process.env.ROLE_MODERATOR!,
@@ -96,7 +100,7 @@ export const config = {
   port: Number(process.env.PORT!),
   backend: {
     /** Python-reporting API */
-    url: process.env.BACKEND_URL || 'http://localhost:8000',
+    url: process.env.BACKEND_URL || 'http://localhost:8001',
   },
   env: (process.env.NODE_ENV as 'development' | 'production') ?? 'development',
   rateLimit: {
