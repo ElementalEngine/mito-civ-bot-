@@ -43,6 +43,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const matchId = interaction.options.getString("match-id", true) as string;
   const playerId = interaction.options.getString("player-id", true) as string;
   const playerDiscordId = interaction.options.getString("discord-id", true) as string;
+  const isCloudChannel = interaction.channelId === config.discord.channels.civ6cloudUploads ||
+    interaction.channelId === config.discord.channels.civ7cloudUploads;
 
   const errors: string[] = [];
 
@@ -58,7 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
     const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id request for <@${playerDiscordId}>...`);
-    if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
+    if (!interaction.member.roles.cache.has(config.discord.roles.moderator) && !isCloudChannel) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`)
         .then(repliedMessage => {
             setTimeout(() => repliedMessage.delete(), 60 * 1000);
