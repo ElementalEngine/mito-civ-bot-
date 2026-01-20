@@ -12,6 +12,7 @@ export type ParsedPlayer = {
   quit: boolean;
   delta?: number;
   season_delta?: number;
+  combined_delta?: number;
   is_sub: boolean;
   subbed_out: boolean;
 };

@@ -153,12 +153,13 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
-  async getLeaderboardRanking(game: string, gameType:string, gameMode: string, isSeasonal: boolean): Promise<LeaderboardRanking> {
+  async getLeaderboardRanking(game: string, gameType:string, gameMode: string, isSeasonal: boolean, isCombined: boolean): Promise<LeaderboardRanking> {
     const form = new FormData();
     form.append("game", game);
     form.append("game_type", gameType)
     form.append("game_mode", gameMode);
     form.append("is_seasonal", isSeasonal ? "1" : "0");
+    form.append("is_combined", isCombined ? "1" : "0");
 
     const res = await this.fetchWithRetry(`${this.base}/api/v1/get-leaderboard-ranking/`, {
       method: "PUT",

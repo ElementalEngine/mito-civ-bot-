@@ -1,6 +1,6 @@
 import { EmbedBuilder, userMention } from "discord.js";
 import type { BaseReport } from "../../types/reports";
-import type { UploadSaveResponse, ParsedPlayer } from "../../api/types";
+import type { UploadSaveResponse, GetMatchResponse, ParsedPlayer } from "../../api/types";
 import { lookupCiv6Leader, lookupCiv7Civ, lookupCiv7Leader } from "../../data";
 import {
   EMOJI_REPORT,
@@ -11,7 +11,7 @@ import {
 } from "../../config/constants";
 import { name } from "../../events/interaction-create";
 
-type AnyReport = UploadSaveResponse | BaseReport;
+type AnyReport = GetMatchResponse | UploadSaveResponse | BaseReport;
 
 type BuildOpts = {
   header?: string;
@@ -35,7 +35,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   const isCiv6 = game === "civ6";
   const modeStr = ("game_mode" in report && report.game_mode ? String(report.game_mode) : "").toLowerCase();
   const isTeamMode = modeStr.includes("team");
-  const gameModeStr = modeStr == "teamer" ? "Teamer" : modeStr == "duel" ? "Duel" : "FFA";
+  const gameModeStr = (report.is_cloud ? "PBC-" : "") + modeStr == "teamer" ? "Teamer" : modeStr == "duel" ? "Duel" : "FFA";
 
   // Meta
   const meta: string[] = [];
@@ -48,7 +48,7 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   const matchDetailsLines = [
     `• MatchID: ${("match_id" in report && report.match_id) ? report.match_id : "—"}`,
   ];
-  if (opts.reporterId) matchDetailsLines.push(`• Reporter: <@${opts.reporterId}>`);
+  matchDetailsLines.push(`• Reporter: <@${report.reporter_discord_id}>`);
   if (opts.approverId) matchDetailsLines.push(`• Approved by: <@${opts.approverId}>`);
   const description = meta.join(" • ") + "\n" + matchDetailsLines.join("\n");
 
@@ -88,11 +88,19 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       for (const p of t.members) {
         const pos = (placement(p) ?? t.members.indexOf(p));
         idColumn.push(`${report.players.indexOf(p) + 1}`);
-        var rankValue = `${fmtDelta(delta(p))}`;
-        if (p.season_delta) {
-          var seasonRankValue = fmtDelta(p.season_delta);
-          rankValue += ` (${seasonRankValue})`;
+        var rankValue = `${fmtDelta(delta(p))}`.padEnd(10);
+        if (report.is_cloud) {
+          if (p.combined_delta !== undefined) {
+              var combinedRankValue = fmtDelta(p.combined_delta);
+              rankValue += `(${combinedRankValue})`.padStart(10);
+          }
+        } else {
+          if (p.season_delta !== undefined) {
+            var seasonRankValue = fmtDelta(p.season_delta);
+            rankValue += `(${seasonRankValue})`.padStart(10);
+          }
         }
+        rankValue = `\`${rankValue}\``;
         rankColumn.push(rankValue);
         nameCivLeaderColumn.push(`${who(p)}${quit(p)}${subinfo(p)} ${civText(isCiv6, isCiv7, p)}`);
       }
@@ -104,9 +112,16 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
       const pos = (placement(p) ?? i);
       idColumn.push(`${report.players.indexOf(p) + 1}`);
       var rankValue = `${rankToken(pos)} ${fmtDelta(delta(p))}`.padEnd(10);
-      if (p.season_delta !== undefined) {
-        var seasonRankValue = fmtDelta(p.season_delta);
-        rankValue += `(${seasonRankValue})`.padStart(10);
+      if (report.is_cloud) {
+         if (p.combined_delta !== undefined) {
+            var combinedRankValue = fmtDelta(p.combined_delta);
+            rankValue += `(${combinedRankValue})`.padStart(10);
+         }
+      } else {
+        if (p.season_delta !== undefined) {
+          var seasonRankValue = fmtDelta(p.season_delta);
+          rankValue += `(${seasonRankValue})`.padStart(10);
+        }
       }
       rankValue = `\`${rankValue}\``;
       rankColumn.push(rankValue);
@@ -120,13 +135,15 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
 
   const currentTime = Math.floor(Date.now() / 1000);
 
+  const rankEloColumnHeader = report.is_cloud ? "Rank / ΔELO (Combined)" : "Rank / ΔELO (Seasonal)";
+
   return new EmbedBuilder()
     .setTitle(`${EMOJI_REPORT} Match Report`)
     .setDescription(description || "—")
     .setColor(embedColor)
     .addFields(
       { name: "ID", value: columnsStr.str[0] || "—", inline: true },
-      { name: "Rank / ΔELO (Seasonal)", value: columnsStr.str[1] || "—", inline: true },
+      { name: rankEloColumnHeader, value: columnsStr.str[1] || "—", inline: true },
       { name: "Players / Civ / Leader", value: columnsStr.str[2] || "—", inline: true },
     )
     .addFields({

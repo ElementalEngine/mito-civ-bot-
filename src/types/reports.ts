@@ -12,6 +12,7 @@ export type BaseReport = {
   is_cloud: boolean;
   discord_messages_id_list: string[];
   players: ParsedPlayer[];
+  reporter_discord_id: string;
 };
 
 export type Civ6Player = ParsedPlayer & {

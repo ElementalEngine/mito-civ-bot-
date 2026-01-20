@@ -56,7 +56,7 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
   }
   rankingMessagesArray.reverse();
 
-  const leaderboardRanking = await getLeaderboardRanking(leaderboard.game, leaderboard.game_type, leaderboard.game_mode, leaderboard.is_seasonal);
+  const leaderboardRanking = await getLeaderboardRanking(leaderboard.game, leaderboard.game_type, leaderboard.game_mode, leaderboard.is_seasonal, leaderboard.is_combined);
   for (var i = 0; i < rankingMessagesArray.length; i++) {
     const msg = rankingMessagesArray[i];
     const leaderboardMsg = getLeaderboardMessage(leaderboardRanking, i * 10, i * 10 + 10);
