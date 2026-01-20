@@ -37,7 +37,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const matchId = interaction.options.getString("match-id", true) as string;
-  const quitterDiscordId = interaction.options.getString("quitter-discord-id", true) as string;
+  var quitterDiscordId = interaction.options.getString("quitter-discord-id", true) as string;
+  if (quitterDiscordId.startsWith('<@') && quitterDiscordId.endsWith('>')) {
+    quitterDiscordId = quitterDiscordId.slice(2, -1);
+  }
 
   const errors: string[] = [];
 

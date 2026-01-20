@@ -42,7 +42,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const matchId = interaction.options.getString("match-id", true) as string;
   const playerId = interaction.options.getString("player-id", true) as string;
-  const playerDiscordId = interaction.options.getString("discord-id", true) as string;
+  var playerDiscordId = interaction.options.getString("discord-id", true) as string;
+  if (playerDiscordId.startsWith('<@') && playerDiscordId.endsWith('>')) {
+    playerDiscordId = playerDiscordId.slice(2, -1);
+  }
   const isCloudChannel = interaction.channelId === config.discord.channels.civ6cloudUploads ||
     interaction.channelId === config.discord.channels.civ7cloudUploads;
 

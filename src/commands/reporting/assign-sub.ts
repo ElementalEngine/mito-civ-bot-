@@ -41,7 +41,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const matchId = interaction.options.getString("match-id", true) as string;
   const subInId = interaction.options.getString("sub-in-id", true) as string;
-  const subOutDiscordID = interaction.options.getString("sub-out-discord-id", true) as string;
+  var subOutDiscordID = interaction.options.getString("sub-out-discord-id", true) as string;
+  if (subOutDiscordID.startsWith('<@') && subOutDiscordID.endsWith('>')) {
+    subOutDiscordID = subOutDiscordID.slice(2, -1);
+  }
 
   const errors: string[] = [];
 
