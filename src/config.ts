@@ -100,7 +100,7 @@ export const config = {
   port: Number(process.env.PORT!),
   backend: {
     /** Python-reporting API */
-    url: process.env.BACKEND_URL || 'http://localhost:8001',
+    url: process.env.BACKEND_URL || 'http://localhost:8000',
   },
   env: (process.env.NODE_ENV as 'development' | 'production') ?? 'development',
   rateLimit: {
