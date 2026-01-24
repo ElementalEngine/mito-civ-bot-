@@ -1,7 +1,7 @@
 import { EmbedBuilder, userMention } from "discord.js";
 import type { BaseReport } from "../types/reports";
 import type { UploadSaveResponse, GetMatchResponse, ParsedPlayer } from "../api/types";
-import { lookupCiv6Leader, lookupCiv7Civ, lookupCiv7Leader } from "../data";
+import { formatCiv6Leader, formatCiv7Civ, formatCiv7Leader } from "../data";
 import {
   EMOJI_REPORT,
   EMOJI_FIRST_PLACE,
@@ -9,7 +9,6 @@ import {
   EMOJI_THIRD_PLACE,
   EMOJI_QUITTER,
 } from "../config/constants";
-import { name } from "../events/interaction-create";
 
 type AnyReport = GetMatchResponse | UploadSaveResponse | BaseReport;
 
@@ -35,7 +34,8 @@ export function buildReportEmbed(report: AnyReport, opts: BuildOpts = {}): Embed
   const isCiv6 = game === "civ6";
   const modeStr = ("game_mode" in report && report.game_mode ? String(report.game_mode) : "").toLowerCase();
   const isTeamMode = modeStr.includes("team");
-  const gameModeStr = (report.is_cloud ? "PBC-" : "") + modeStr == "teamer" ? "Teamer" : modeStr == "duel" ? "Duel" : "FFA";
+  const normalizedMode = modeStr === "teamer" ? "Teamer" : modeStr === "duel" ? "Duel" : "FFA";
+  const gameModeStr = `${report.is_cloud ? "PBC-" : ""}${normalizedMode}`;
 
   // Meta
   const meta: string[] = [];
@@ -206,15 +206,17 @@ function civText(isCiv6: boolean, isCiv7: boolean, p: ParsedPlayer): string {
   if (isCiv7) {
     const civKey = (p as any).civ;
     const leaderKey = (p as any).leader;
-    const civName = civKey ? lookupCiv7Civ(civKey) : null;
-    const leaderName = leaderKey ? lookupCiv7Leader(leaderKey) : null;
-    const s = [civName, leaderName ? `(${leaderName})` : ""].filter(Boolean).join(" ");
-    return s || "—";
+    const civVal = civKey ? formatCiv7Civ(String(civKey)) : null;
+    const leaderVal = leaderKey ? formatCiv7Leader(String(leaderKey)) : null;
+    const parts: string[] = [];
+    if (civVal && civVal !== "—") parts.push(civVal);
+    if (leaderVal && leaderVal !== "—") parts.push(`(${leaderVal})`);
+    return parts.join(" ") || "—";
   }
   if (isCiv6) {
     const leaderKey = (p as any).civ;
-    const leaderName = leaderKey ? lookupCiv6Leader(leaderKey) : null;
-    return leaderName || "—";
+    const leaderVal = leaderKey ? formatCiv6Leader(String(leaderKey)) : null;
+    return leaderVal && leaderVal !== "—" ? leaderVal : "—";
   }
   const cv = (p as any).civ as string | undefined;
   return cv || "—";
@@ -248,4 +250,3 @@ function clampNColumns(
   }
   return { str: [] };
 }
-
