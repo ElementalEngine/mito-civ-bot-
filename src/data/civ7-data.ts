@@ -35,7 +35,6 @@ export const CIV7_LEADERS = Object.freeze({
   LEADER_XERXES_ALT: { gameId: "Xerxes_the_Achaemenid", emojiId: "1464705416398245949", type: "None" },
 } satisfies Record<string, LeaderMeta>);
 
-
 export type Civ7LeaderKey = keyof typeof CIV7_LEADERS;
 
 export const CIV7_CIVS = Object.freeze({
@@ -87,6 +86,14 @@ export const CIV7_CIVS = Object.freeze({
   CIVILIZATION_SIAM: { gameId: "Siam", emojiId: "1464703973654270176", agePool: "Modern_Age" },
 } satisfies Record<string, CivMeta>);
 
+function render(gameId: string, emojiId?: string): string {
+  const id = emojiId?.trim();
+  if (id && /^\d{15,22}$/.test(id)) {
+    return `<:${gameId}:${id}>`;
+  }
+  return gameId;
+}
+
 export type Civ7CivKey = keyof typeof CIV7_CIVS;
 
 export function lookupCiv7LeaderMeta(key: string): LeaderMeta | undefined {
@@ -103,10 +110,6 @@ export function lookupCiv7CivMeta(key: string): CivMeta | undefined {
 
 export function lookupCiv7Civ(key: string): string {
   return lookupCiv7CivMeta(key)?.gameId ?? key;
-}
-
-function render(gameId: string, emojiId?: string): string {
-  return emojiId ? `<:${gameId}:${emojiId}> ${gameId}` : gameId;
 }
 
 export function formatCiv7Leader(key: string): string {

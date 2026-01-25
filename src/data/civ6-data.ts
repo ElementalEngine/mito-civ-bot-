@@ -179,6 +179,15 @@ export const CIV6_LEADERS = Object.freeze({
   LEADER_SUK_VERCINGETORIX_DLC: { gameId: "Vercingetorix", emojiId: "1465012929655996539", type: "None" },
 } satisfies Record<string, LeaderMeta>);
 
+function render(meta: LeaderMeta): string {
+  const emojiId = meta.emojiId?.trim();
+  if (emojiId && /^\d{15,22}$/.test(emojiId)) {
+    return `<:${meta.gameId}:${emojiId}>`;
+  }
+  // Fallback: raw gameId
+  return meta.gameId;
+}
+
 export type Civ6LeaderKey = keyof typeof CIV6_LEADERS;
 
 export function lookupCiv6LeaderMeta(key: string): LeaderMeta | undefined {
@@ -187,10 +196,6 @@ export function lookupCiv6LeaderMeta(key: string): LeaderMeta | undefined {
 
 export function lookupCiv6Leader(key: string): string {
   return lookupCiv6LeaderMeta(key)?.gameId ?? key;
-}
-
-function render(meta: LeaderMeta): string {
-  return meta.emojiId ? `<:${meta.gameId}:${meta.emojiId}> ${meta.gameId}` : meta.gameId;
 }
 
 export function formatCiv6Leader(key: string): string {
