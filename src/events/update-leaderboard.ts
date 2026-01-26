@@ -108,6 +108,5 @@ async function updateLeaderboards(client: Client): Promise<void> {
 
 export async function execute(client: Client): Promise<void> {
   // updating leaderboards every hour
-  updateLeaderboards(client);
   setInterval(updateLeaderboards, 60 * 60 * 1000, client);
 }
