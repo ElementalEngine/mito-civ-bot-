@@ -111,6 +111,22 @@ export class ApiClient {
     return (await this.parseJson(res)) as GetMatchResponse;
   }
 
+  async assignDiscordIdAll(matchId: string, discordIdList: string[], discordMessageId: string): Promise<GetMatchResponse> {
+    const form = new FormData();
+    form.append("match_id", matchId);
+    for (const discordId of discordIdList) {
+      form.append("discord_id_list", discordId);
+    }
+    form.append("discord_message_id", discordMessageId);
+
+    const res = await this.fetchWithRetry(`${this.base}/api/v1/assign-discord-id-all/`, {
+      method: "PUT",
+      body: form,
+    });
+
+    return (await this.parseJson(res)) as GetMatchResponse;
+  }
+
   async assignSub(matchId: string, subInId: string, subOutDiscordId: string, discordMessageId: string): Promise<GetMatchResponse> {
     const form = new FormData();
     form.append("match_id", matchId);

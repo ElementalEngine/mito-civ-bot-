@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { config } from "../../config";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { assignDiscordId } from "../../services/reporting.service";
+import { assignDiscordIdAll } from "../../services/reporting.service";
 import { buildReportEmbed } from "../../ui/report.layout";
 import { chunkByLength } from "../../utils/chunk-by-length";
 import { convertMatchToStr } from "../../utils/convert-match-to-str";
@@ -13,21 +13,16 @@ import { convertMatchToStr } from "../../utils/convert-match-to-str";
 import type { BaseReport } from "../../types/reports";
 
 export const data = new SlashCommandBuilder()
-  .setName("assign-discord-id")
-  .setDescription("Set a player's discord id.")
+  .setName("assign-discord-id-all")
+  .setDescription("Set all players discord id in order.")
   .addStringOption(option =>
     option.setName("match-id")
       .setDescription("ID of the match to change discord id of a player")
       .setRequired(true),
   )
   .addStringOption(option =>
-    option.setName("player-id")
-      .setDescription("ID of the player in this match to assign")
-      .setRequired(true),
-  )
-  .addStringOption(option =>
-    option.setName("discord-id")
-      .setDescription("Discord ID of the player (you may also tag the player)")
+    option.setName("discord-id-list")
+      .setDescription("List of players discord IDs separated by space (you can also tag players)")
       .setRequired(true),
   );
 
@@ -41,11 +36,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const matchId = interaction.options.getString("match-id", true) as string;
-  const playerId = interaction.options.getString("player-id", true) as string;
-  var playerDiscordId = interaction.options.getString("discord-id", true) as string;
-  if (playerDiscordId.startsWith('<@') && playerDiscordId.endsWith('>')) {
-    playerDiscordId = playerDiscordId.slice(2, -1);
-  }
+  const discordIdList = interaction.options.getString("discord-id-list", true) as string;
+  let discordIds = discordIdList.split(' ').map(id => {
+    if (id.startsWith('<@') && id.endsWith('>')) {
+      return id.slice(2, -1);
+    }
+    return id;
+  });
+  discordIds = discordIds.filter(id => id.length > 0);
   const isCloudChannel = interaction.channelId === config.discord.channels.civ6cloudUploads ||
     interaction.channelId === config.discord.channels.civ7cloudUploads;
 
@@ -62,7 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   try {
     if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
-    const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id request for <@${playerDiscordId}>...`);
+    const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id all request...`);
     if (!interaction.member.roles.cache.has(config.discord.roles.moderator) && !isCloudChannel) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`)
         .then(repliedMessage => {
@@ -71,7 +69,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .catch();
       return;
     }
-    const res = await assignDiscordId(matchId, playerId, playerDiscordId, assignDiscordIdMsg.id);
+    const res = await assignDiscordIdAll(matchId, discordIds, assignDiscordIdMsg.id);
 
     const updatedEmbed = buildReportEmbed(res, {
       reporterId: interaction.user.id,
@@ -82,8 +80,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await message.edit({ embeds: [updatedEmbed] });
     }
 
+    let playerMentions = discordIds.map(p => `<@${p}>`).join(', ');
     const header =
-      `${EMOJI_CONFIRM} <@${playerDiscordId}>\nDiscord ID assigned by <@${interaction.user.id}>\n` +
+      `${EMOJI_CONFIRM} ${playerMentions}\nDiscord ID assigned by <@${interaction.user.id}>\n` +
       `Match ID: **${res.match_id}**\n`;
 
     const full = header + convertMatchToStr(res as BaseReport, false);

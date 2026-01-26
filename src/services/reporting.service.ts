@@ -65,6 +65,15 @@ export async function assignDiscordId(
   return api.assignDiscordId(matchId, playerId, playerDiscordId, discordMessageId);
 }
 
+export async function assignDiscordIdAll(
+  matchId: string,
+  discordIdList: string[],
+  discordMessageId: string,
+  api: ApiClient = new ApiClient(),
+) : Promise<GetMatchResponse> {
+  return api.assignDiscordIdAll(matchId, discordIdList, discordMessageId);
+}
+
 export async function assignSub(
   matchId: string,
   subInId: string,
