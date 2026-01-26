@@ -1,8 +1,9 @@
 import { Events } from 'discord.js';
-import { Client, ChatInputCommandInteraction, GuildBasedChannel } from 'discord.js';
+import { Client, GuildBasedChannel, Message } from 'discord.js';
 import { getLeaderboardRanking } from "../services/reporting.service";
 import { Leaderboard } from "../types/leaderboard";
 import { leaderboardsList } from "./leaderboards-list";
+import { LeaderboardRanking } from '../api';
 
 export const name = Events.ClientReady;
 export const once = false;
@@ -41,23 +42,43 @@ function getLeaderboardMessage(leaderboardRanking: any, startIdx: number, endIdx
   return message;
 }
 
+function isLeaderboardUptodate(leaderboardRanking: LeaderboardRanking, lastMessage: Message<true>): boolean {
+  const lastUpdatedLine = lastMessage.content;
+  const lastUpdatedMatch = lastUpdatedLine.match(/Last updated: <t:(\d+):F>/);
+  if (!lastUpdatedMatch || lastUpdatedMatch.length < 2) {
+    return false;
+  }
+  const lastUpdatedTimestamp = parseInt(lastUpdatedMatch[1]);
+  const uploadingTime = new Date(2026, 1, 1, 0, 0, 0, 0).getTime();
+  if (leaderboardRanking.last_updated === uploadingTime) {
+    return true;
+  }
+  if (leaderboardRanking.last_updated <= lastUpdatedTimestamp) {
+    return true;
+  }
+  return false;
+}
+
 async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Promise<void> {
-  console.log(`${new Date().toLocaleTimeString()}: Updating leaderboard: ${leaderboard.name} with id ${leaderboard.thread_id}`);
   var leaderboardThread = getLeaderboardThread(client, leaderboard.thread_id);
   if (!leaderboardThread || !leaderboardThread.isTextBased()) {
     return;
   }
-  const rankingMessages = (await leaderboardThread.messages.fetch({ limit: 10 })).filter(m => m.author.bot);
+  const rankingMessages = (await leaderboardThread.messages.fetch({ limit: 11 })).filter(m => m.author.bot);
   await sleep(10000); // to avoid rate limits
   var rankingMessagesArray = rankingMessages.map(m => m);
-  while (rankingMessagesArray.length < 10) {
+  while (rankingMessagesArray.length < 11) {
     rankingMessagesArray.splice(0, 0, await leaderboardThread.send(`Placeholder for leaderboard entry.`));
     await sleep(2000); // to avoid rate limits
   }
   rankingMessagesArray.reverse();
 
   const leaderboardRanking = await getLeaderboardRanking(leaderboard.game, leaderboard.game_type, leaderboard.game_mode, leaderboard.is_seasonal, leaderboard.is_combined);
-  for (var i = 0; i < rankingMessagesArray.length; i++) {
+  if (isLeaderboardUptodate(leaderboardRanking, rankingMessagesArray[rankingMessagesArray.length - 1])) {
+    return;
+  }
+  console.log(`${new Date().toLocaleTimeString()}: Updating leaderboard: ${leaderboard.name} with id ${leaderboard.thread_id}`);
+  for (var i = 0; i < rankingMessagesArray.length - 1; i++) {
     const msg = rankingMessagesArray[i];
     const leaderboardMsg = getLeaderboardMessage(leaderboardRanking, i * 10, i * 10 + 10);
     // console.log(`${new Date().toLocaleTimeString()} Updating leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
@@ -65,6 +86,12 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
     // console.log(`${new Date().toLocaleTimeString()} Updated leaderboard message ${i + 1}/10 for ${leaderboard.name}`);
     await sleep(4000); // to avoid rate limits
   }
+  // last message is showing the last updated time
+  const lastMsg = rankingMessagesArray[rankingMessagesArray.length - 1];
+  let lastUpdatedTime = Math.round(new Date(leaderboardRanking.last_updated).getTime());
+  const lastUpdatedMsg = `Last updated: <t:${lastUpdatedTime}:F>`;
+  await lastMsg.edit(lastUpdatedMsg);
+  await sleep(4000); // to avoid rate limits
 }
 
 async function updateLeaderboards(client: Client): Promise<void> {
@@ -81,5 +108,6 @@ async function updateLeaderboards(client: Client): Promise<void> {
 
 export async function execute(client: Client): Promise<void> {
   // updating leaderboards every hour
+  updateLeaderboards(client);
   setInterval(updateLeaderboards, 60 * 60 * 1000, client);
 }

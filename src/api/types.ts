@@ -74,4 +74,5 @@ export type PlayerRanking = {
 
 export type LeaderboardRanking = {
   player_rankings: PlayerRanking[];
+  last_updated: number;
 }
