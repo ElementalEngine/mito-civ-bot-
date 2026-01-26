@@ -84,7 +84,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     if (res?.repeated === true) {
-      await interaction.editReply(`Match already reported! Match ID: ${res.match_id}`)
+      const duplicateReportEmbed = new EmbedBuilder()
+        .setDescription(`${EMOJI_FAIL} Match already reported! Match ID: **${res.match_id}**`);
+      await pendingMsg.edit(
+        { embeds: [duplicateReportEmbed] }
+      )
         .then(repliedMessage => {
           setTimeout(() => repliedMessage.delete(), 60 * 1000);
         })
