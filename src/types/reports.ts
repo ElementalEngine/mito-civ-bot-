@@ -1,4 +1,4 @@
-import {ParsedPlayer} from "../api/types"
+import type { ParsedPlayer } from "../api/types.js";
 
 export type GameMode = "realtime" | "cloud";
 

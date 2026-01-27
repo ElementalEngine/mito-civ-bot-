@@ -3,13 +3,13 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants";
-import { setPlacements, getMatch } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/report.layout";
-import { getPlayerListMessage, isValidOrder } from "../../utils/convert-match-to-str";
+import { config } from "../../config.js";
+import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants.js";
+import { setPlacements, getMatch } from "../../services/reporting.service.js";
+import { buildReportEmbed } from "../../ui/report.layout.js";
+import { getPlayerListMessage, isValidOrder } from "../../utils/convert-match-to-str.js";
 
-import type { BaseReport } from "../../types/reports";
+import type { BaseReport } from "../../types/reports.js";
 
 export const data = new SlashCommandBuilder()
   .setName("change-report-order")

@@ -1,8 +1,6 @@
-import { log } from "console";
-import { config } from "../config";
-import { ApiError } from "./errors";
-import type { UploadSaveResponse, GetMatchResponse, LeaderboardRanking } from "./types";
-import { match } from "assert";
+import { config } from "../config.js";
+import { ApiError } from "./errors.js";
+import type { UploadSaveResponse, GetMatchResponse, LeaderboardRanking } from "./types.js";
 
 type FetchLike = typeof fetch;
 

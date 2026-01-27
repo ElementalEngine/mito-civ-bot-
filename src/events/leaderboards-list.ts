@@ -1,5 +1,5 @@
-import { Leaderboard } from '../types/leaderboard';
-import { config } from '../config';
+import type { Leaderboard } from '../types/leaderboard.js';
+import { config } from '../config.js';
 
 const civ6_pbc_ffa_leaderboard = {
   name: 'Civ6_PBC_FFA',

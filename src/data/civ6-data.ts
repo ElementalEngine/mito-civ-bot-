@@ -1,4 +1,4 @@
-import type { LeaderMeta } from "./index";
+import type { LeaderMeta } from "./index.js";
 // live mito bot
 export const CIV6_LEADERS = Object.freeze({
   LEADER_ABRAHAM_LINCOLN: { gameId: "AmericaAbrahamLincoln", emojiId: "1464719535990116563", type: "None" },

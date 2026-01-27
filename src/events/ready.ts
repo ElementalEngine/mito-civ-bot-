@@ -1,6 +1,6 @@
 import { Events } from 'discord.js';
-import { Client } from 'discord.js';
-import { deployCommands } from '../deploy';
+import type { Client } from 'discord.js';
+import { deployCommands } from '../deploy.js';
 
 export const name = Events.ClientReady;
 export const once = true;

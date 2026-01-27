@@ -1,5 +1,5 @@
-import { BaseReport, Civ6Report, Civ7Report } from "../types/reports.js";
-import {ParsedPlayer} from "../api/types"
+import type { BaseReport, Civ6Report, Civ7Report } from "../types/reports.js";
+import type { ParsedPlayer } from "../api/types.js";
 
 export function isValidOrder(new_order: string, players: ParsedPlayer[]): boolean {
   let order = new_order.split(" ").map(id => parseInt(id));

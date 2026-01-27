@@ -1,4 +1,4 @@
-import type { CivMeta, LeaderMeta } from "./index";
+import type { CivMeta, LeaderMeta } from "./index.js";
 
 export const CIV7_LEADERS = Object.freeze({
   LEADER_ADA_LOVELACE: { gameId: "Ada_Lovelace", emojiId: "1464705360970645504", type: "None" },

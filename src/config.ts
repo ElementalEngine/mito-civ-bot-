@@ -1,8 +1,8 @@
-import { CorsOptions } from 'cors';
+import type { CorsOptions } from 'cors';
 import { config as env } from 'dotenv';
-import path from 'path';
+import path from 'node:path';
 
-export * from './config/constants';
+export * from './config/constants.js';
 
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 env({

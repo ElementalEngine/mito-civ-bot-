@@ -1,14 +1,14 @@
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord.js";
 import type { Collection } from "@discordjs/collection";
-import type { Command } from "./types/global";
-import { config } from "./config";
+import type { Command } from "./types/global.js";
+import { config } from "./config.js";
 
 export async function deployCommands(
   commands: Collection<string, Command>,
   guildId: string = config.discord.guildId, 
 ): Promise<void> {
-  const payload = Array.from(commands.values(), c => c.data.toJSON());
+  const payload = [...commands.values()].map((cmd) => cmd.data.toJSON());
   if (payload.length === 0) {
     console.log("ℹ️ No commands to deploy.");
     return;
@@ -25,9 +25,12 @@ export async function deployCommands(
   try {
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: payload });
     console.log("✅ Commands deployed successfully");
-  } catch (error: any) {
-    const detail = error?.rawError ? JSON.stringify(error.rawError) : String(error);
+  } catch (error: unknown) {
+    const detail =
+      typeof error === "object" && error !== null && "rawError" in error
+        ? JSON.stringify((error as { rawError: unknown }).rawError)
+        : String(error);
     console.error("❌ Failed to deploy commands:", detail);
-    throw error; 
+    throw error;
   }
 }

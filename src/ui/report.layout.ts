@@ -1,14 +1,14 @@
 import { EmbedBuilder, userMention } from "discord.js";
-import type { BaseReport } from "../types/reports";
-import type { UploadSaveResponse, GetMatchResponse, ParsedPlayer } from "../api/types";
-import { formatCiv6Leader, formatCiv7Civ, formatCiv7Leader } from "../data";
+import type { BaseReport } from "../types/reports.js";
+import type { UploadSaveResponse, GetMatchResponse, ParsedPlayer } from "../api/types.js";
+import { formatCiv6Leader, formatCiv7Civ, formatCiv7Leader } from "../data/index.js";
 import {
   EMOJI_REPORT,
   EMOJI_FIRST_PLACE,
   EMOJI_SECOND_PLACE,
   EMOJI_THIRD_PLACE,
   EMOJI_QUITTER,
-} from "../config/constants";
+} from "../config/constants.js";
 
 type AnyReport = GetMatchResponse | UploadSaveResponse | BaseReport;
 

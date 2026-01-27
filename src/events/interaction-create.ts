@@ -1,5 +1,5 @@
 import { Collection, Events, Interaction, MessageFlags } from "discord.js";
-import type { Command } from "../types/global";
+import type { Command } from "../types/global.js";
 
 export const name = Events.InteractionCreate;
 export const once = false;

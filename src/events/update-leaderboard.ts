@@ -1,9 +1,9 @@
 import { Events } from 'discord.js';
-import { Client, GuildBasedChannel, Message } from 'discord.js';
-import { getLeaderboardRanking } from "../services/reporting.service";
-import { Leaderboard } from "../types/leaderboard";
-import { leaderboardsList } from "./leaderboards-list";
-import { LeaderboardRanking } from '../api';
+import type { Client, GuildBasedChannel, Message } from 'discord.js';
+import { getLeaderboardRanking } from "../services/reporting.service.js";
+import type { Leaderboard } from "../types/leaderboard.js";
+import { leaderboardsList } from "./leaderboards-list.js";
+import type { LeaderboardRanking } from '../api/types.js';
 
 export const name = Events.ClientReady;
 export const once = false;
@@ -64,9 +64,9 @@ async function updateLeaderboard(client: Client, leaderboard: Leaderboard): Prom
   if (!leaderboardThread || !leaderboardThread.isTextBased()) {
     return;
   }
-  const rankingMessages = (await leaderboardThread.messages.fetch({ limit: 11 })).filter(m => m.author.bot);
+  const rankingMessages = (await leaderboardThread.messages.fetch({ limit: 11 })).filter((m) => m.author.bot);
   await sleep(10000); // to avoid rate limits
-  var rankingMessagesArray = rankingMessages.map(m => m);
+  const rankingMessagesArray = [...rankingMessages.values()];
   while (rankingMessagesArray.length < 11) {
     rankingMessagesArray.splice(0, 0, await leaderboardThread.send(`Placeholder for leaderboard entry.`));
     await sleep(2000); // to avoid rate limits
@@ -101,7 +101,7 @@ async function updateLeaderboards(client: Client): Promise<void> {
       await updateLeaderboard(client, leaderboard);
     }
     console.log("✅ Leaderboards updated successfully");
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("❌ Failed to update leaderboards:", err);
   }
 }

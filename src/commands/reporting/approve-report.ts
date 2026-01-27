@@ -3,14 +3,14 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { approveMatch } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/report.layout";
-import { convertMatchToStr, getPlayerListMessage } from "../../utils/convert-match-to-str";
-import { chunkByLength } from "../../utils/chunk-by-length";
+import { config } from "../../config.js";
+import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants.js";
+import { approveMatch } from "../../services/reporting.service.js";
+import { buildReportEmbed } from "../../ui/report.layout.js";
+import { convertMatchToStr, getPlayerListMessage } from "../../utils/convert-match-to-str.js";
+import { chunkByLength } from "../../utils/chunk-by-length.js";
 
-import type { BaseReport } from "../../types/reports";
+import type { BaseReport } from "../../types/reports.js";
 
 export const data = new SlashCommandBuilder()
   .setName("approve-report")

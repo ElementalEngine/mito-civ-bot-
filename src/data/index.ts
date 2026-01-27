@@ -21,5 +21,5 @@ export type CivMeta = Readonly<{
   agePool: AgePool;
 }>;
 
-export * from "./civ6-data";
-export * from "./civ7-data";
+export * from "./civ6-data.js";
+export * from "./civ7-data.js";

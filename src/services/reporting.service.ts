@@ -1,6 +1,10 @@
-import type { UploadSaveResponse, GetMatchResponse, LeaderboardRanking } from "../api";
-import { ApiClient } from "../api";
-import { downloadAttachment } from "../utils/download-attachment";
+import type {
+  UploadSaveResponse,
+  GetMatchResponse,
+  LeaderboardRanking,
+} from "../api/index.js";
+import { ApiClient } from "../api/index.js";
+import { downloadAttachment } from "../utils/download-attachment.js";
 
 export async function submitSaveForReport(
   fileUrl: string,

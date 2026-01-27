@@ -4,19 +4,22 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { config } from "../../config";
-import { validateSaveAttachment } from "../../utils/validate-save-attachment";
-import { CivEdition, EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { submitSaveForReport, appendMessageIdList } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/report.layout";
-import { chunkByLength } from "../../utils/chunk-by-length";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { config } from "../../config.js";
+import { validateSaveAttachment } from "../../utils/validate-save-attachment.js";
 import {
+  EMOJI_CONFIRM,
+  EMOJI_FAIL,
   EMOJI_REPORT,
-} from "../../config/constants";
+  MAX_DISCORD_LEN,
+} from "../../config/constants.js";
+import type { CivEdition } from "../../config/constants.js";
+import { submitSaveForReport, appendMessageIdList } from "../../services/reporting.service.js";
+import { buildReportEmbed } from "../../ui/report.layout.js";
+import { chunkByLength } from "../../utils/chunk-by-length.js";
+import { convertMatchToStr } from "../../utils/convert-match-to-str.js";
 
-import type { GameMode, BaseReport } from "../../types/reports";
-import type { UploadSaveResponse } from "../../api/types";
+import type { GameMode, BaseReport } from "../../types/reports.js";
+import type { UploadSaveResponse } from "../../api/types.js";
 
 export const data = new SlashCommandBuilder()
   .setName("report-game")

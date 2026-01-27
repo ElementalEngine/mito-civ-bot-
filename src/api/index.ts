@@ -1,3 +1,3 @@
-export * from "./types";
-export * from "./errors";
-export { ApiClient } from "./client";
+export * from "./types.js";
+export * from "./errors.js";
+export { ApiClient } from "./client.js";

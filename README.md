@@ -107,7 +107,7 @@ Below are example previews of MitoCiv’s features:
 - **Libraries:** discord.js, Express  
 - **Database:** MongoDB  
 - **APIs:** Steam Web API, civ-save-phase API  
-- **Other Tools:** nodemon (development), npm  
+- **Other Tools:** Node.js `--watch` + TypeScript watch (`tsc -w`), ESLint, npm  
 
 [Back to Top](#table-of-contents)
 
@@ -125,6 +125,14 @@ Below are example previews of MitoCiv’s features:
 ## Availability & Deployment
 > **Note:** MitoCiv Bot is a **private bot** and not available for public self-hosting.  
 It requires access to a centralized database for leaderboards and statistics.
+
+### Developer Commands
+- Ensure Node.js 24.4.1 is active (e.g. `node -v`).
+- Install: `npm ci`
+- Dev (watch): `npm run dev`
+- Verify (pre-deploy gate): `npm run verify`
+- Build + run (prod): `npm run build && npm start`
+- Deploy commands: `npm run build && npm run deploy`
 
 [Back to Top](#table-of-contents)
 

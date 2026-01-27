@@ -3,10 +3,10 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants";
-import { deletePendingMatch, getMatch } from "../../services/reporting.service";
-import { getPlayerListMessage } from "../../utils/convert-match-to-str";
+import { config } from "../../config.js";
+import { EMOJI_CONFIRM, EMOJI_FAIL, EMOJI_REPORT } from "../../config/constants.js";
+import { deletePendingMatch, getMatch } from "../../services/reporting.service.js";
+import { getPlayerListMessage } from "../../utils/convert-match-to-str.js";
 
 export const data = new SlashCommandBuilder()
   .setName("remove-match")

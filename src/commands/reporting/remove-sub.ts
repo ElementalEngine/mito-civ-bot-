@@ -3,13 +3,13 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
 } from "discord.js";
-import { config } from "../../config";
-import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants";
-import { getMatch, removeSub } from "../../services/reporting.service";
-import { buildReportEmbed } from "../../ui/report.layout";
-import { convertMatchToStr } from "../../utils/convert-match-to-str";
+import { config } from "../../config.js";
+import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants.js";
+import { getMatch, removeSub } from "../../services/reporting.service.js";
+import { buildReportEmbed } from "../../ui/report.layout.js";
+import { convertMatchToStr } from "../../utils/convert-match-to-str.js";
 
-import type { BaseReport } from "../../types/reports";
+import type { BaseReport } from "../../types/reports.js";
 
 export const data = new SlashCommandBuilder()
   .setName("remove-sub")

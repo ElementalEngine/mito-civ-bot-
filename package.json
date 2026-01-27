@@ -1,6 +1,6 @@
 {
   "name": "mito-civ-discord-bot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Bot for Civilization VI Discord Community «CivCPL». Developed in TypeScript using MongoDB, Express, Discord API, Steam Web API.",
   "keywords": [
     "Discord",
@@ -18,39 +18,33 @@
   },
   "license": "Apache-2.0",
   "author": "ProjectCisco",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=24.4.1"
   },
   "scripts": {
-    "build": "tsc",
-    "build:clean": "rm -rf dist tsconfig.tsbuildinfo && tsc",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "dev:watch": "nodemon",
-    "start": "node dist/index.js",
-    "lint": "eslint . --ext .ts",
-    "test": "jest"
-  },
-  "ts-node-dev": {
-    "watch": [
-      "src"
-    ],
-    "ext": "ts,json",
-    "ignore": [
-      "src/**/*.spec.ts",
-      "src/**/*.test.ts"
-    ]
-  },
-  "nodemonConfig": {
-    "exec": "ts-node --esm src/index.ts",
-    "watch": [
-      "src"
-    ],
-    "ext": "ts,json",
-    "ignore": [
-      "dist",
-      "node_modules"
-    ]
+    "clean": "node --input-type=commonjs -e \"const fs=require('node:fs'); const path=require('node:path'); for (const p of ['dist','tsconfig.tsbuildinfo']) { fs.rmSync(path.resolve(p), { recursive: true, force: true }); }\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json -w --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify": "npm run typecheck && npm run build && npm run lint",
+    "dev": "concurrently -k -n tsc,node \"npm:build:watch\" \"npm:start:watch\"",
+    "start": "node --enable-source-maps dist/index.js",
+    "start:watch": "node --enable-source-maps --watch dist/index.js",
+    "deploy": "node dist/deploy.js",
+    "lint": "eslint .",
+    "test": "node --input-type=commonjs -e \"console.log('No tests configured');\""
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.0",
@@ -66,22 +60,21 @@
     "morgan": "^1.10.1",
     "steamapi": "^3.1.4"
   },
+  "overrides": {
+    "undici": "6.23.0"
+  },
   "devDependencies": {
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/helmet": "^4.0.0",
-    "@types/jest": "^30.0.0",
     "@types/morgan": "^1.9.10",
-    "@types/node": "^25.0.3",
+    "@types/node": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
-    "jest": "^30.2.0",
-    "nodemon": "^3.1.11",
-    "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   },
   "prettier": {
