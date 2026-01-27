@@ -40,6 +40,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "npm run typecheck && npm run build && npm run lint",
     "dev": "concurrently -k -n tsc,node \"npm:build:watch\" \"npm:start:watch\"",
+    "dev:ts": "tsx watch src/index.ts",
     "start": "node --enable-source-maps dist/index.js",
     "start:watch": "node --enable-source-maps --watch dist/index.js",
     "deploy": "node dist/deploy.js",
@@ -73,6 +74,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
     "concurrently": "^9.2.1",
+    "tsx": "^4.19.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "typescript": "^5.9.3"
