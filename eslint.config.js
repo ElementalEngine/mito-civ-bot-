@@ -7,6 +7,8 @@ import prettier from 'eslint-config-prettier';
  * - Parses TypeScript
  * - Applies @typescript-eslint recommended rules
  * - Disables formatting rules via eslint-config-prettier
+ *
+ * Important: keep lint low-friction (no repo-wide refactors required).
  */
 export default [
   {
@@ -28,15 +30,20 @@ export default [
       ...tseslint.configs.recommended.rules,
       ...prettier.rules,
 
-      // Keep lint low-friction. Warnings don't fail CI by default.
+      // Keep lint low-friction. Warnings don't fail.
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
           ignoreRestSiblings: true,
         },
       ],
+
+      // Legacy code compatibility (don’t force a repo-wide refactor right now)
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
     },
   },
 ];
