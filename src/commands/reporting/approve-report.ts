@@ -1,25 +1,73 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  MessageFlags,
-} from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
+
 import { config } from "../../config.js";
-import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants.js";
+import { EMOJI_FAIL } from "../../config/constants.js";
 import { approveMatch } from "../../services/reporting.service.js";
 import { buildReportEmbed } from "../../ui/report.layout.js";
-import { convertMatchToStr, getPlayerListMessage } from "../../utils/convert-match-to-str.js";
-import { chunkByLength } from "../../utils/chunk-by-length.js";
+import { getPlayerListMessage } from "../../utils/convert-match-to-str.js";
 
 import type { BaseReport } from "../../types/reports.js";
 
 export const data = new SlashCommandBuilder()
   .setName("approve-report")
   .setDescription("Finalizes reporting a game.")
-  .addStringOption(option =>
-    option.setName("match-id")
+  .addStringOption((option) =>
+    option
+      .setName("match-id")
       .setDescription("ID of the match to finalize")
       .setRequired(true),
   );
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return typeof err === "string" ? err : "Unknown error";
+}
+
+function memberHasRole(interaction: ChatInputCommandInteraction, roleId: string): boolean {
+  const member = interaction.member;
+  if (!member || typeof member !== "object") return false;
+
+  if ("roles" in member && Array.isArray((member as { roles: unknown }).roles)) {
+    return (member as { roles: string[] }).roles.includes(roleId);
+  }
+
+  if ("roles" in member) {
+    const roles = (member as { roles: unknown }).roles;
+    if (roles && typeof roles === "object" && "cache" in roles) {
+      const cache = (roles as { cache: { has: (id: string) => boolean } }).cache;
+      return cache.has(roleId);
+    }
+  }
+
+  return false;
+}
+
+async function safeDefer(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  if (interaction.deferred || interaction.replied) return true;
+  try {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    return true;
+  } catch (e: unknown) {
+    console.error("/approve-report deferReply failed:", e);
+    return false;
+  }
+}
+
+function getHistoryChannelId(channelId: string): string | null {
+  const map: Record<string, string> = {
+    [config.discord.channels.civ6realtimeUploads]:
+      config.discord.channels.civ6realtimeReportingHistory,
+    [config.discord.channels.civ6cloudUploads]:
+      config.discord.channels.civ6cloudReportingHistory,
+    [config.discord.channels.civ7realtimeUploads]:
+      config.discord.channels.civ7realtimeReportingHistory,
+    [config.discord.channels.civ7cloudUploads]:
+      config.discord.channels.civ7cloudReportingHistory,
+  };
+
+  return map[channelId] ?? null;
+}
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.inGuild()) {
@@ -30,74 +78,62 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const matchId = interaction.options.getString("match-id", true) as string;
+  if (!(await safeDefer(interaction))) return;
 
-  const errors: string[] = [];
-
-  if (errors.length) {
-    await interaction.reply({
-      content: `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join("\n")}`,
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  await interaction.deferReply({
-    flags: MessageFlags.Ephemeral,
-  });
+  const matchId = interaction.options.getString("match-id", true);
 
   try {
-    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
-    if (!interaction.member.roles.cache.has(config.discord.roles.moderator)) {
+    if (!memberHasRole(interaction, config.discord.roles.moderator)) {
       await interaction.editReply(`${EMOJI_FAIL} Only a moderator can approve a report`);
       return;
     }
-    const res = await approveMatch(matchId, interaction.user.id);
-    var historyChannelId;
-    if (interaction.channelId == config.discord.channels.civ6realtimeUploads) {
-      historyChannelId = config.discord.channels.civ6realtimeReportingHistory;
-    } else if (interaction.channelId == config.discord.channels.civ6cloudUploads) {
-      historyChannelId = config.discord.channels.civ6cloudReportingHistory;
-    } else if (interaction.channelId == config.discord.channels.civ7realtimeUploads) {
-      historyChannelId = config.discord.channels.civ7realtimeReportingHistory;
-    } else if (interaction.channelId == config.discord.channels.civ7cloudUploads) {
-      historyChannelId = config.discord.channels.civ7cloudReportingHistory;
-    } else {
-      await interaction.editReply(`${EMOJI_FAIL} This command can only be used in the designated reporting channels.`);
+
+    const historyChannelId = getHistoryChannelId(interaction.channelId);
+    if (!historyChannelId) {
+      await interaction.editReply(
+        `${EMOJI_FAIL} This command can only be used in the designated reporting channels.`,
+      );
       return;
     }
+
     const historyChannel = interaction.guild?.channels.cache.get(historyChannelId);
     if (!historyChannel || !historyChannel.isTextBased()) {
-      await interaction.editReply(`${EMOJI_FAIL} History channel ${historyChannelId} not found or is not text-based.`);
+      await interaction.editReply(
+        `${EMOJI_FAIL} History channel ${historyChannelId} not found or is not text-based.`,
+      );
       return;
     }
+
+    const res = (await approveMatch(matchId, interaction.user.id)) as BaseReport;
 
     const playerList = getPlayerListMessage(res, "", "\t");
     const embed = buildReportEmbed(res, {
       approverId: interaction.user.id,
-      isFinal: true
+      isFinal: true,
     });
-    await historyChannel.send({
-      content: playerList,
-      embeds: [embed] 
-    }); 
-    for (var msg in res.discord_messages_id_list) {
+
+    await historyChannel.send({ content: playerList, embeds: [embed] });
+
+    // Best-effort cleanup of old report messages
+    const ids = res.discord_messages_id_list ?? [];
+    for (const messageId of ids) {
       try {
-        const message = await interaction.channel?.messages.fetch(res.discord_messages_id_list[msg]);
-        if (message) {
-          await message.delete();
-        }
-      } catch (e) {
-        console.log(`Failed to delete message id ${res.discord_messages_id_list[msg]} for match ${matchId}`);
+        const message = await interaction.channel?.messages.fetch(messageId);
+        if (message) await message.delete();
+      } catch {
+        console.log(`Failed to delete message id ${messageId} for match ${matchId}`);
       }
     }
+
     await interaction.editReply(`Report is approved successfully!`);
-  } catch (err: any) {
-    const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`)
-      .then(repliedMessage => {
-          setTimeout(() => repliedMessage.delete(), 60 * 1000);
-        })
-      .catch();
+  } catch (err: unknown) {
+    const msg = errorMessage(err);
+
+    await interaction
+      .editReply(`${EMOJI_FAIL} Match approval failed: ${msg}`)
+      .then((repliedMessage) => {
+        setTimeout(() => void repliedMessage.delete().catch(() => {}), 60_000);
+      })
+      .catch(() => {});
   }
 }
