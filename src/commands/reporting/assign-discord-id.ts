@@ -1,32 +1,86 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  MessageFlags,
-} from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
+
 import { config } from "../../config.js";
 import { EMOJI_CONFIRM, EMOJI_FAIL, MAX_DISCORD_LEN } from "../../config/constants.js";
 import { assignDiscordId } from "../../services/reporting.service.js";
 import { buildReportEmbed } from "../../ui/report.layout.js";
 import { chunkByLength } from "../../utils/chunk-by-length.js";
 import { convertMatchToStr } from "../../utils/convert-match-to-str.js";
-
 import type { BaseReport } from "../../types/reports.js";
+
+function normalizeDiscordId(input: string): string {
+  const t = input.trim();
+  // <@123> or <@!123>
+  if (t.startsWith("<@") && t.endsWith(">")) {
+    const inner = t.slice(2, -1);
+    return inner.startsWith("!") ? inner.slice(1) : inner;
+  }
+  return t;
+}
+
+function isSnowflake(id: string): boolean {
+  return /^[0-9]{15,25}$/.test(id);
+}
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return typeof err === "string" ? err : "Unknown error";
+}
+
+function memberHasRole(interaction: ChatInputCommandInteraction, roleId: string): boolean {
+  const member = interaction.member;
+  if (!member || typeof member !== "object") return false;
+
+  // APIInteractionGuildMember: roles is string[]
+  if ("roles" in member && Array.isArray((member as { roles: unknown }).roles)) {
+    return (member as { roles: string[] }).roles.includes(roleId);
+  }
+  
+  if ("roles" in member) {
+    const roles = (member as { roles: unknown }).roles;
+    if (roles && typeof roles === "object" && "cache" in roles) {
+      const cache = (roles as { cache: { has: (id: string) => boolean } }).cache;
+      return cache.has(roleId);
+    }
+  }
+
+  return false;
+}
+
+async function safeDefer(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  if (interaction.deferred || interaction.replied) return true;
+  try {
+    await interaction.deferReply(); // keep non-ephemeral behavior
+    return true;
+  } catch (e: unknown) {
+    console.error("/assign-discord-id deferReply failed:", e);
+    return false;
+  }
+}
+
+function deleteLater(message: { delete: () => Promise<unknown> }, ms: number): void {
+  setTimeout(() => void message.delete().catch(() => {}), ms);
+}
 
 export const data = new SlashCommandBuilder()
   .setName("assign-discord-id")
   .setDescription("Set a player's discord id.")
-  .addStringOption(option =>
-    option.setName("match-id")
+  .addStringOption((option) =>
+    option
+      .setName("match-id")
       .setDescription("ID of the match to change discord id of a player")
       .setRequired(true),
   )
-  .addStringOption(option =>
-    option.setName("player-id")
+  .addStringOption((option) =>
+    option
+      .setName("player-id")
       .setDescription("ID of the player in this match to assign")
       .setRequired(true),
   )
-  .addStringOption(option =>
-    option.setName("discord-id")
+  .addStringOption((option) =>
+    option
+      .setName("discord-id")
       .setDescription("Discord ID of the player (you may also tag the player)")
       .setRequired(true),
   );
@@ -40,60 +94,72 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const matchId = interaction.options.getString("match-id", true) as string;
-  const playerId = interaction.options.getString("player-id", true) as string;
-  var playerDiscordId = interaction.options.getString("discord-id", true) as string;
-  if (playerDiscordId.startsWith('<@') && playerDiscordId.endsWith('>')) {
-    playerDiscordId = playerDiscordId.slice(2, -1);
-  }
-  const isCloudChannel = interaction.channelId === config.discord.channels.civ6cloudUploads ||
-    interaction.channelId === config.discord.channels.civ7cloudUploads;
+  // ✅ ack immediately to avoid 10062
+  if (!(await safeDefer(interaction))) return;
 
-  const errors: string[] = [];
+  const matchId = interaction.options.getString("match-id", true);
+  const playerId = interaction.options.getString("player-id", true);
+  const rawDiscordId = interaction.options.getString("discord-id", true);
+  const playerDiscordId = normalizeDiscordId(rawDiscordId);
 
-  if (errors.length) {
-    await interaction.reply({
-      content: `${EMOJI_FAIL} FAIL\n${errors.map(e => `• ${e}`).join("\n")}`,
-      flags: MessageFlags.Ephemeral,
-    });
+  if (!isSnowflake(playerDiscordId)) {
+    const msg = await interaction.editReply(
+      `${EMOJI_FAIL} Invalid Discord ID. Use a numeric ID or tag the user (e.g. <@123...>).`,
+    );
+    deleteLater(msg, 60_000);
     return;
   }
-  await interaction.deferReply();
+
+  const isCloudChannel =
+    interaction.channelId === config.discord.channels.civ6cloudUploads ||
+    interaction.channelId === config.discord.channels.civ7cloudUploads;
+
+  const isModerator = memberHasRole(interaction, config.discord.roles.moderator);
+
+  // preserve existing policy: moderators anywhere, otherwise only in cloud channels
+  if (!isModerator && !isCloudChannel) {
+    const msg = await interaction.editReply(
+      `${EMOJI_FAIL} Only a moderator can assign a player discord id.`,
+    );
+    deleteLater(msg, 60_000);
+    return;
+  }
 
   try {
-    if (!interaction.inCachedGuild()) throw new Error('Not a cached guild');
-    const assignDiscordIdMsg = await interaction.editReply(`Processing assign discord id request for <@${playerDiscordId}>...`);
-    if (!interaction.member.roles.cache.has(config.discord.roles.moderator) && !isCloudChannel) {
-      await interaction.editReply(`${EMOJI_FAIL} Only a moderator can assign a player discord id.`)
-        .then(repliedMessage => {
-            setTimeout(() => repliedMessage.delete(), 60 * 1000);
-          })
-        .catch();
-      return;
-    }
-    const res = await assignDiscordId(matchId, playerId, playerDiscordId, assignDiscordIdMsg.id);
+    const statusMsg = await interaction.editReply(
+      `Processing assign discord id request for <@${playerDiscordId}>...`,
+    );
 
-    const updatedEmbed = buildReportEmbed(res, {
-      reporterId: interaction.user.id,
-    });
-    const embedMsgId = (res as BaseReport).discord_messages_id_list[0];
-    const message = await interaction.channel?.messages.fetch(embedMsgId);
-    if (message) {
-      await message.edit({ embeds: [updatedEmbed] });
+    const res = await assignDiscordId(matchId, playerId, playerDiscordId, statusMsg.id);
+    const report = res as BaseReport;
+    const embedMsgId = report.discord_messages_id_list?.[0];
+    if (embedMsgId && interaction.channel?.isTextBased()) {
+      const updatedEmbed = buildReportEmbed(res, { reporterId: interaction.user.id });
+      const msg = await interaction.channel.messages.fetch(embedMsgId).catch(() => null);
+      if (msg) {
+        await msg.edit({ embeds: [updatedEmbed] }).catch((e: unknown) => {
+          console.warn("Failed to edit report embed message:", e);
+        });
+      }
     }
 
     const header =
       `${EMOJI_CONFIRM} <@${playerDiscordId}>\nDiscord ID assigned by <@${interaction.user.id}>\n` +
-      `Match ID: **${res.match_id}**\n`;
+      `Match ID: **${report.match_id}**\n`;
 
-    const full = header + convertMatchToStr(res as BaseReport, false);
-    assignDiscordIdMsg.edit(full);
-  } catch (err: any) {
-    const msg = err?.body ? `${err.message}: ${JSON.stringify(err.body)}` : (err?.message ?? "Unknown error");
-    await interaction.editReply(`${EMOJI_FAIL} Discord ID assignment failed: ${msg}`)
-      .then(repliedMessage => {
-          setTimeout(() => repliedMessage.delete(), 60 * 1000);
-        })
-      .catch();
+    const full = header + convertMatchToStr(report, false);
+    const chunks = Array.from(chunkByLength(full, MAX_DISCORD_LEN));
+    const first = chunks[0] ?? header;
+
+    await statusMsg.edit(first);
+
+    for (const chunk of chunks.slice(1)) {
+      await interaction.followUp({ content: chunk }).catch(() => {});
+    }
+  } catch (err: unknown) {
+    const msg = await interaction.editReply(
+      `${EMOJI_FAIL} Discord ID assignment failed: ${errorMessage(err)}`,
+    );
+    deleteLater(msg, 60_000);
   }
 }
