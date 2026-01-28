@@ -20,8 +20,8 @@ const client = new Client({
 
 client.commands = new Collection<string, Command>();
 
-// Runtime is always compiled JavaScript under ./dist.
-const RUNTIME_EXT = ".js";
+const RUNTIME_EXT = path.extname(__filename) === ".ts" ? ".ts" : ".js";
+
 const isLoadable = (f: string) =>
   f.endsWith(RUNTIME_EXT) && !f.endsWith(".d.ts") && !f.endsWith(".map");
 
