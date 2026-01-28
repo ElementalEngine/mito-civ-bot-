@@ -20,41 +20,37 @@ function uniqSnowflakes(ids: readonly string[]): string[] {
   return [...set];
 }
 
-function effectiveChannelId(interaction: ChatInputCommandInteraction): string {
+function getEffectiveChannelId(interaction: ChatInputCommandInteraction): string {
   const ch = interaction.channel;
   if (ch?.isThread?.()) return ch.parentId ?? interaction.channelId;
   return interaction.channelId;
 }
 
-async function replyEphemeral(
+async function safeReplyEphemeral(
   interaction: ChatInputCommandInteraction,
   content: string
 ): Promise<void> {
-  const base = {
-    content,
-    allowedMentions: { parse: [] as const },
-  } as const;
+  const base = { content, allowedMentions: { parse: [] as const } } as const;
 
-  if (interaction.deferred) {
-    await interaction.editReply(base);
-    return;
+  try {
+    if (interaction.deferred) {
+      await interaction.editReply(base);
+      return;
+    }
+
+    const payload = { ...base, flags: MessageFlags.Ephemeral } as const;
+
+    if (interaction.replied) {
+      await interaction.followUp(payload);
+      return;
+    }
+    await interaction.reply(payload);
+  } catch {
   }
-
-  const payload = { ...base, flags: MessageFlags.Ephemeral } as const;
-
-  if (interaction.replied) {
-    await interaction.followUp(payload);
-    return;
-  }
-
-  await interaction.reply(payload);
 }
 
-async function getRoleIds(
-  interaction: ChatInputCommandInteraction
-): Promise<Set<string> | null> {
+function getMemberRoleIds(interaction: ChatInputCommandInteraction): Set<string> | null {
   if (!interaction.inGuild() || !interaction.guild) return null;
-
   if (interaction.inCachedGuild()) {
     return new Set(interaction.member.roles.cache.keys());
   }
@@ -66,13 +62,7 @@ async function getRoleIds(
       return new Set(roles);
     }
   }
-
-  try {
-    const fetched = await interaction.guild.members.fetch(interaction.user.id);
-    return new Set(fetched.roles.cache.keys());
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 function mentionChannels(ids: readonly string[]): string {
@@ -88,7 +78,7 @@ export async function ensureCommandAccess(
   policy: CommandAccessPolicy
 ): Promise<boolean> {
   if (!interaction.inGuild()) {
-    await replyEphemeral(
+    await safeReplyEphemeral(
       interaction,
       `${EMOJI_FAIL} This command must be used in a server.`
     );
@@ -97,36 +87,37 @@ export async function ensureCommandAccess(
 
   const allowedChannels = uniqSnowflakes(policy.allowedChannelIds);
   if (allowedChannels.length === 0) {
-    await replyEphemeral(
+    await safeReplyEphemeral(
       interaction,
       `${EMOJI_ERROR} Command access is not configured (no valid allowed channels).`
     );
     return false;
   }
 
-  const channelId = effectiveChannelId(interaction);
+  const channelId = getEffectiveChannelId(interaction);
   if (!allowedChannels.includes(channelId)) {
-    await replyEphemeral(
+    await safeReplyEphemeral(
       interaction,
       `${EMOJI_FAIL} Use this command in: ${mentionChannels(allowedChannels)}`
     );
     return false;
   }
 
+  // Channel-only commands
   if (policy.requiredRoleIds === undefined) return true;
 
   const requiredRoles = uniqSnowflakes(policy.requiredRoleIds);
   if (requiredRoles.length === 0) {
-    await replyEphemeral(
+    await safeReplyEphemeral(
       interaction,
       `${EMOJI_ERROR} Command access is not configured (no valid required roles).`
     );
     return false;
   }
 
-  const roleIds = await getRoleIds(interaction);
+  const roleIds = getMemberRoleIds(interaction);
   if (!roleIds) {
-    await replyEphemeral(
+    await safeReplyEphemeral(
       interaction,
       `${EMOJI_ERROR} Unable to verify your roles. Try again.`
     );
@@ -134,19 +125,17 @@ export async function ensureCommandAccess(
   }
 
   const moderatorId = config.discord.roles.moderator?.trim() ?? '';
-  const developerId =
-    policy.allowDeveloperOverride ? (config.discord.roles.developer?.trim() ?? '') : '';
-
   if (moderatorId && roleIds.has(moderatorId)) return true;
+
+  const developerId = policy.allowDeveloperOverride
+    ? (config.discord.roles.developer?.trim() ?? '')
+    : '';
   if (developerId && roleIds.has(developerId)) return true;
 
   if (requiredRoles.some((id) => roleIds.has(id))) return true;
 
-  const displayed = uniqSnowflakes(
-    [moderatorId, developerId, ...requiredRoles].filter(Boolean)
-  );
-
-  await replyEphemeral(
+  const displayed = uniqSnowflakes([moderatorId, developerId, ...requiredRoles].filter(Boolean));
+  await safeReplyEphemeral(
     interaction,
     `${EMOJI_FAIL} Missing required role. Need one of: ${mentionRoles(displayed)}`
   );
