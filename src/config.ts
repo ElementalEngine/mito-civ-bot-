@@ -90,9 +90,11 @@ const discord = {
   roles: {
     moderator: process.env.ROLE_MODERATOR!,
     developer: process.env.ROLE_DEVELOPER!,
-    civ6Rank: process.env.ROLE_CIV6!,
-    civ7Rank: process.env.ROLE_CIV7!,
-    civCloud: process.env.ROLE_CIV_CLOUD!,
+    noviceManager: process.env.ROLE_NOVICE_MANAGER!,
+    civ6Rank: process.env.ROLE_CIV6_RANKED!,
+    civ7Rank: process.env.ROLE_CIV7_RANKED!,
+    civCloud: process.env.ROLE_CLOUD!,
+    novice: process.env.ROLE_NOVICE!,
   },
 };
 
