@@ -24,6 +24,12 @@ const discord = {
   channels: {
     botTesting: 
       process.env.CHANNEL_BOT_COMMANDS_ID!,
+    civ6Commands:
+      process.env.CHANNEL_CIV6_COMMANDS_ID ?? '',
+    civ7Commands:
+      process.env.CHANNEL_CIV7_COMMANDS_ID ?? '',
+    cloudCommands:
+      process.env.CHANNEL_CLOUD_COMMANDS_ID ?? '',
     civ6realtimeUploads:
       process.env.CHANNEL_CIV6_REALTIME_UPLOADS_ID ?? '',
     civ7realtimeUploads:
@@ -86,6 +92,7 @@ const discord = {
     developer: process.env.ROLE_DEVELOPER!,
     civ6Rank: process.env.ROLE_CIV6!,
     civ7Rank: process.env.ROLE_CIV7!,
+    civCloud: process.env.ROLE_CIV_CLOUD!,
   },
 };
 
