@@ -4,18 +4,18 @@ import { config } from '../config.js';
 import { EMOJI_ERROR, EMOJI_FAIL } from '../config/constants.js';
 
 export type CommandAccessPolicy = Readonly<{
-  allowedChannelIds: readonly string[];
-  requiredRoleIds?: readonly string[];
+  allowedChannelIds: readonly (string | null | undefined)[];
+  requiredRoleIds?: readonly (string | null | undefined)[];
   allowDeveloperOverride?: boolean;
 }>;
 
 const SNOWFLAKE_RE = /^\d{17,20}$/;
 
-function uniqSnowflakes(ids: readonly string[]): string[] {
+function uniqSnowflakes(ids: readonly (string | null | undefined)[]): string[] {
   const set = new Set<string>();
   for (const raw of ids) {
-    const id = raw.trim();
-    if (SNOWFLAKE_RE.test(id)) set.add(id);
+    const id = raw?.trim();
+    if (id && SNOWFLAKE_RE.test(id)) set.add(id);
   }
   return [...set];
 }
@@ -46,11 +46,15 @@ async function safeReplyEphemeral(
     }
     await interaction.reply(payload);
   } catch {
+    // Ignore: interaction may already be acknowledged/expired.
   }
 }
 
-function getMemberRoleIds(interaction: ChatInputCommandInteraction): Set<string> | null {
-  if (!interaction.inGuild() || !interaction.guild) return null;
+function getMemberRoleIds(
+  interaction: ChatInputCommandInteraction
+): Set<string> | null {
+  if (!interaction.inGuild()) return null;
+
   if (interaction.inCachedGuild()) {
     return new Set(interaction.member.roles.cache.keys());
   }
@@ -103,7 +107,6 @@ export async function ensureCommandAccess(
     return false;
   }
 
-  // Channel-only commands
   if (policy.requiredRoleIds === undefined) return true;
 
   const requiredRoles = uniqSnowflakes(policy.requiredRoleIds);
@@ -134,7 +137,9 @@ export async function ensureCommandAccess(
 
   if (requiredRoles.some((id) => roleIds.has(id))) return true;
 
-  const displayed = uniqSnowflakes([moderatorId, developerId, ...requiredRoles].filter(Boolean));
+  const displayed = uniqSnowflakes(
+    [moderatorId, developerId, ...requiredRoles].filter(Boolean)
+  );
   await safeReplyEphemeral(
     interaction,
     `${EMOJI_FAIL} Missing required role. Need one of: ${mentionRoles(displayed)}`
