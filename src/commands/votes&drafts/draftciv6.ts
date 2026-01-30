@@ -46,13 +46,7 @@ async function replyError(
     }
     await interaction.reply(payload);
   } catch {
-    // swallow: interaction may already be acknowledged/expired
   }
-}
-
-function hasGuildEmoji(interaction: ChatInputCommandInteraction, emojiId: string): boolean {
-  if (!interaction.inCachedGuild()) return true;
-  return interaction.guild.emojis.cache.has(emojiId);
 }
 
 export const data = new SlashCommandBuilder()
@@ -81,9 +75,9 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption((opt) =>
     opt
       .setName('number-teams')
-      .setDescription('Required for Teamer (2–5). Do not use for FFA/Duel.')
+      .setDescription('Required for Teamer (2–7). Do not use for FFA/Duel.')
       .setMinValue(2)
-      .setMaxValue(5)
+      .setMaxValue(7)
       .setRequired(false)
   )
   .addStringOption((opt) =>
@@ -116,9 +110,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       leaderBansRaw,
     });
 
-    const embed = buildCiv6DraftEmbed(draft, {
-      hasEmojiId: (id) => hasGuildEmoji(interaction, id),
-    });
+    const embed = buildCiv6DraftEmbed(draft);
 
     await interaction.editReply({ embeds: [embed] });
   } catch (err: unknown) {

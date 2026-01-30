@@ -54,11 +54,6 @@ async function replyError(
   }
 }
 
-function hasGuildEmoji(interaction: ChatInputCommandInteraction, emojiId: string): boolean {
-  if (!interaction.inCachedGuild()) return true;
-  return interaction.guild.emojis.cache.has(emojiId);
-}
-
 export const data = new SlashCommandBuilder()
   .setName('draftciv7')
   .setDescription('Generate a Civ 7 draft (leaders + civs).')
@@ -146,9 +141,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       civBansRaw,
     });
 
-    const embed = buildCiv7DraftEmbed(draft, {
-      hasEmojiId: (id) => hasGuildEmoji(interaction, id),
-    });
+    const embed = buildCiv7DraftEmbed(draft);
 
     await interaction.editReply({ embeds: [embed] });
   } catch (err: unknown) {
