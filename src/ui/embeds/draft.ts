@@ -2,10 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 import type { AgePool, CivMeta, LeaderMeta } from '../../data/index.js';
 import { lookupCiv6LeaderMeta } from '../../data/civ6-data.js';
-import {
-  lookupCiv7CivMeta,
-  lookupCiv7LeaderMeta,
-} from '../../data/civ7-data.js';
+import { lookupCiv7CivMeta, lookupCiv7LeaderMeta } from '../../data/civ7-data.js';
 import type { Civ6DraftResult, Civ7DraftResult, DraftGameType } from '../../services/draft.js';
 
 type HasEmoji = (emojiId: string) => boolean;
@@ -22,30 +19,14 @@ function sanitizeEmojiName(name: string): string {
   return trimmed.length >= 2 ? trimmed.slice(0, 32) : 'civ';
 }
 
-function renderEmoji(meta: Readonly<{ gameId: string; emojiId?: string }>, has?: HasEmoji): string {
+function renderEmoji(
+  meta: Readonly<{ gameId: string; emojiId?: string }>,
+  has?: HasEmoji
+): string {
   const id = meta.emojiId?.trim();
   if (!id) return '';
   if (has && !has(id)) return '';
   return `<:${sanitizeEmojiName(meta.gameId)}:${id}>`;
-}
-
-function titleCaseWord(w: string): string {
-  if (!w) return w;
-  if (/^[IVX]+$/.test(w)) return w; // roman numerals
-  if (w.length <= 3 && w === w.toUpperCase()) return w;
-  return w[0].toUpperCase() + w.slice(1).toLowerCase();
-}
-
-function humanizeKey(key: string): string {
-  const stripped = key
-    .replace(/^LEADER_/, '')
-    .replace(/^CIVILIZATION_/, '')
-    .trim();
-  return stripped
-    .split('_')
-    .filter(Boolean)
-    .map(titleCaseWord)
-    .join(' ');
 }
 
 function labelForGroup(kind: 'Player' | 'Team', idx: number): string {
@@ -76,14 +57,19 @@ function formatHeader(args: Readonly<{
   return parts.join('\n');
 }
 
-function line(meta: Readonly<{ gameId: string; emojiId?: string }>, name: string, has?: HasEmoji): string {
+function line(
+  meta: Readonly<{ gameId: string; emojiId?: string }>,
+  has?: HasEmoji
+): string {
   const e = renderEmoji(meta, has);
-  return e ? `${e} ${name}` : name;
+  return e ? `${e} ${meta.gameId}` : meta.gameId;
 }
 
-function metaOrFallback<T extends LeaderMeta | CivMeta>(meta: T | undefined, fallbackGameId: string): Readonly<{ gameId: string; emojiId?: string }> {
+function metaOrUnknown<T extends LeaderMeta | CivMeta>(
+  meta: T | undefined
+): Readonly<{ gameId: string; emojiId?: string }> {
   if (meta) return { gameId: meta.gameId, emojiId: meta.emojiId };
-  return { gameId: fallbackGameId };
+  return { gameId: 'Unknown' };
 }
 
 export function buildCiv6DraftEmbed(
@@ -102,8 +88,8 @@ export function buildCiv6DraftEmbed(
     lines.push('');
     lines.push(`**${labelForGroup(draft.allocation.groupKind, i)}**`);
     for (const k of draft.groups[i].leaders) {
-      const meta = metaOrFallback(lookupCiv6LeaderMeta(k), k);
-      lines.push(line(meta, humanizeKey(k), opts.hasEmojiId));
+      const meta = metaOrUnknown(lookupCiv6LeaderMeta(k));
+      lines.push(line(meta, opts.hasEmojiId));
     }
   }
 
@@ -132,16 +118,16 @@ export function buildCiv7DraftEmbed(
     const g = draft.groups[i];
     lines.push('');
     lines.push(`**${labelForGroup(draft.allocation.groupKind, i)}**`);
-    lines.push('leaders');
+    lines.push('**Leaders**');
     for (const k of g.leaders) {
-      const meta = metaOrFallback(lookupCiv7LeaderMeta(k), k);
-      lines.push(line(meta, humanizeKey(k), opts.hasEmojiId));
+      const meta = metaOrUnknown(lookupCiv7LeaderMeta(k));
+      lines.push(line(meta, opts.hasEmojiId));
     }
     lines.push('');
-    lines.push('civs');
+    lines.push('**Civs**');
     for (const k of g.civs ?? []) {
-      const meta = metaOrFallback(lookupCiv7CivMeta(k), k);
-      lines.push(line(meta, humanizeKey(k), opts.hasEmojiId));
+      const meta = metaOrUnknown(lookupCiv7CivMeta(k));
+      lines.push(line(meta, opts.hasEmojiId));
     }
   }
 

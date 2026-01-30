@@ -334,9 +334,20 @@ export function generateCiv7Draft(req: Civ7DraftRequest): Civ7DraftResult {
 
   shuffle(leaderPool);
   const groups: DraftGroup[] = [];
+  const duelUniqueCivPool =
+    groupCount === 2 && civPool.length >= civsPerGroup * 2
+      ? (() => {
+          const copy = civPool.slice();
+          shuffle(copy);
+          return copy;
+        })()
+      : null;
+
   for (let i = 0; i < groupCount; i++) {
     const leaders = dealUnique(leaderPool, leadersPerGroup);
-    const civs = pickDistinct(civPool, civsPerGroup);
+    const civs = duelUniqueCivPool
+      ? dealUnique(duelUniqueCivPool, civsPerGroup)
+      : pickDistinct(civPool, civsPerGroup);
     groups.push({ leaders, civs });
   }
 
