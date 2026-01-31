@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 
-import type { CivMeta, LeaderMeta, LeaderType } from '../data/index.js';
+import type { LeaderType } from '../data/index.js';
 import { CIV6_LEADERS } from '../data/civ6-data.js';
 import { CIV7_CIVS, CIV7_LEADERS } from '../data/civ7-data.js';
 import type {
@@ -8,7 +8,6 @@ import type {
   Civ6DraftResult,
   Civ7DraftRequest,
   Civ7DraftResult,
-  DraftAllocation,
   DraftGameType,
   DraftGroup,
   DraftGroupKind,
@@ -47,8 +46,7 @@ const LEADER_TYPES: readonly LeaderType[] = [
 
 type Civ6LeaderKey = keyof typeof CIV6_LEADERS;
 
-const EMOJI_MENTION_RE = /^<a?:[^:>]{2,32}:(\d{15,22})>$/;
-const SNOWFLAKE_RE = /^\d{15,22}$/;
+const CUSTOM_EMOJI_MENTION_RE = /^<a?:([A-Za-z0-9_]{2,32}):(\d{15,22})>$/;
 
 function shuffle<T>(arr: T[]): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -57,80 +55,75 @@ function shuffle<T>(arr: T[]): void {
   }
 }
 
-function tokenizeBans(raw?: string): string[] {
+function tokenizeEmojiBans(raw?: string): string[] {
   if (!raw) return [];
-  const tokens = raw
-    .split(/[\n,]+/)
+  return raw
+    .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  // Also support pasting whitespace-separated emoji mentions/ids
-  const expanded: string[] = [];
-  for (const t of tokens) {
-    const parts = t.split(/\s+/).filter(Boolean);
-    expanded.push(...parts);
-  }
-  return expanded;
 }
 
-function normalizeToken(raw: string): string {
-  const t = raw.trim();
-  if (t.startsWith(':') && t.endsWith(':') && t.length > 2) {
-    return t.slice(1, -1);
-  }
-  return t;
+function extractEmojiNameFromMention(token: string): string | undefined {
+  const m = CUSTOM_EMOJI_MENTION_RE.exec(token.trim());
+  return m?.[1];
 }
 
-function buildLeaderBanIndex(
-  leaders: Readonly<Record<string, LeaderMeta>>
+function buildGameIdIndex<T extends Readonly<{ gameId: string }>>(
+  items: Readonly<Record<string, T>>
 ): ReadonlyMap<string, string> {
   const map = new Map<string, string>();
-  for (const [key, meta] of Object.entries(leaders)) {
-    map.set(key.toLowerCase(), key);
+  for (const [key, meta] of Object.entries(items)) {
     map.set(meta.gameId.toLowerCase(), key);
-    const emojiId = meta.emojiId?.trim();
-    if (emojiId && SNOWFLAKE_RE.test(emojiId)) map.set(emojiId, key);
   }
   return map;
 }
 
-function buildCivBanIndex(
-  civs: Readonly<Record<string, CivMeta>>
-): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  for (const [key, meta] of Object.entries(civs)) {
-    map.set(key.toLowerCase(), key);
-    map.set(meta.gameId.toLowerCase(), key);
-    const emojiId = meta.emojiId?.trim();
-    if (emojiId && SNOWFLAKE_RE.test(emojiId)) map.set(emojiId, key);
-  }
-  return map;
-}
-
-function resolveBanKeys(
+function resolveEmojiBanKeys(
   tokens: readonly string[],
-  index: ReadonlyMap<string, string>,
+  indexByGameId: ReadonlyMap<string, string>,
   label: string
 ): Set<string> {
   const banned = new Set<string>();
+  const invalid: string[] = [];
   const unknown: string[] = [];
 
-  for (const raw of tokens) {
-    const token = normalizeToken(raw);
-    const m = EMOJI_MENTION_RE.exec(token);
-    const id = m?.[1] ?? (SNOWFLAKE_RE.test(token) ? token : null);
-    const key = (id ? index.get(id) : undefined) ?? index.get(token.toLowerCase());
-    if (!key) {
-      unknown.push(token);
+  for (const token of tokens) {
+    const name = extractEmojiNameFromMention(token);
+    if (!name) {
+      invalid.push(token);
       continue;
     }
+
+    const key = indexByGameId.get(name.toLowerCase());
+    if (!key) {
+      unknown.push(name);
+      continue;
+    }
+
     banned.add(key);
   }
 
-  if (unknown.length > 0) {
-    const shown = unknown.slice(0, 5).join(', ');
-    const suffix = unknown.length > 5 ? ` (+${unknown.length - 5} more)` : '';
-    throw new DraftError('VALIDATION', `Unknown ${label} ban(s): ${shown}${suffix}`);
+  if (invalid.length > 0 || unknown.length > 0) {
+    const parts: string[] = [];
+    if (invalid.length > 0) {
+      const shown = invalid.slice(0, 5).join(', ');
+      parts.push(
+        `Invalid format: ${shown}${invalid.length > 5 ? ` (+${invalid.length - 5} more)` : ''}`
+      );
+    }
+    if (unknown.length > 0) {
+      const shown = unknown.slice(0, 8).join(', ');
+      parts.push(
+        `Unknown: ${shown}${unknown.length > 8 ? ` (+${unknown.length - 8} more)` : ''}`
+      );
+    }
+
+    throw new DraftError(
+      'VALIDATION',
+      `Invalid ${label} ban(s). Paste custom emoji mentions separated by commas. ${parts.join(' • ')}`
+    );
   }
+
   return banned;
 }
 
@@ -347,8 +340,8 @@ export function generateCiv6Draft(req: Civ6DraftRequest): Civ6DraftResult {
     numberTeams: req.numberTeams,
   });
 
-  const leaderIndex = buildLeaderBanIndex(CIV6_LEADERS);
-  const banned = resolveBanKeys(tokenizeBans(req.leaderBansRaw), leaderIndex, 'leader');
+  const leaderIndex = buildGameIdIndex(CIV6_LEADERS);
+  const banned = resolveEmojiBanKeys(tokenizeEmojiBans(req.leaderBansRaw), leaderIndex, 'leader');
 
   const allLeaderKeys = Object.keys(CIV6_LEADERS) as Civ6LeaderKey[];
   const available = allLeaderKeys.filter((k) => !banned.has(k));
@@ -382,15 +375,15 @@ export function generateCiv7Draft(req: Civ7DraftRequest): Civ7DraftResult {
     numberTeams: req.numberTeams,
   });
 
-  const leaderIndex = buildLeaderBanIndex(CIV7_LEADERS);
-  const civIndex = buildCivBanIndex(CIV7_CIVS);
+  const leaderIndex = buildGameIdIndex(CIV7_LEADERS);
+  const civIndex = buildGameIdIndex(CIV7_CIVS);
 
-  const bannedLeaders = resolveBanKeys(
-    tokenizeBans(req.leaderBansRaw),
+  const bannedLeaders = resolveEmojiBanKeys(
+    tokenizeEmojiBans(req.leaderBansRaw),
     leaderIndex,
     'leader'
   );
-  const bannedCivs = resolveBanKeys(tokenizeBans(req.civBansRaw), civIndex, 'civ');
+  const bannedCivs = resolveEmojiBanKeys(tokenizeEmojiBans(req.civBansRaw), civIndex, 'civ');
 
   const allLeaderKeys = Object.keys(CIV7_LEADERS);
   const leaderPool = allLeaderKeys.filter((k) => !bannedLeaders.has(k));

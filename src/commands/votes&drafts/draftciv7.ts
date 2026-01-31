@@ -99,13 +99,13 @@ export const data = new SlashCommandBuilder()
   .addStringOption((opt) =>
     opt
       .setName('leader-bans')
-      .setDescription('Optional. Paste emojis/ids/keys to ban leaders (comma or space separated).')
+      .setDescription('Optional. Paste leader emojis separated by commas.')
       .setRequired(false)
   )
   .addStringOption((opt) =>
     opt
       .setName('civ-bans')
-      .setDescription('Optional. Paste emojis/ids/keys to ban civs (comma or space separated).')
+      .setDescription('Optional. Paste civ emojis separated by commas.')
       .setRequired(false)
   );
 
