@@ -8,7 +8,7 @@ import { config } from '../../config.js';
 import { EMOJI_ERROR } from '../../config/constants.js';
 import type { AgePool } from '../../data/index.js';
 import { ensureCommandAccess } from '../../utils/ensure-command-access.js';
-import { DraftError, generateCiv7Draft } from '../../services/draft.js';
+import { DraftError, generateCiv7Draft } from '../../services/draft.service.js';
 import { buildCiv7DraftEmbed } from '../../ui/embeds/draft.js';
 
 const ACCESS_POLICY = {

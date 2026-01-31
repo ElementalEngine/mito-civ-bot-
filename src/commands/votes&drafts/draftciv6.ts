@@ -7,7 +7,7 @@ import {
 import { config } from '../../config.js';
 import { EMOJI_ERROR } from '../../config/constants.js';
 import { ensureCommandAccess } from '../../utils/ensure-command-access.js';
-import { generateCiv6Draft, DraftError } from '../../services/draft.js';
+import { generateCiv6Draft, DraftError } from '../../services/draft.service.js';
 import { buildCiv6DraftEmbed } from '../../ui/embeds/draft.js';
 
 const ACCESS_POLICY = {
