@@ -46,6 +46,7 @@ async function replyError(
     }
     await interaction.reply(payload);
   } catch {
+    // swallow: interaction may already be acknowledged/expired
   }
 }
 
