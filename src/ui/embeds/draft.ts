@@ -1,15 +1,15 @@
 import { EmbedBuilder } from 'discord.js';
 
-import type { AgePool, CivMeta, LeaderMeta } from '../../data/index.js';
 import { lookupCiv6LeaderMeta } from '../../data/civ6-data.js';
-import { lookupCiv7CivMeta, lookupCiv7LeaderMeta } from '../../data/civ7-data.js';
-import type { Civ6DraftResult, Civ7DraftResult, DraftGameType } from '../../services/draft.js';
-
-type HasEmoji = (emojiId: string) => boolean;
-
-export type BuildDraftEmbedOpts = Readonly<{
-  hasEmojiId?: HasEmoji;
-}>;
+import {
+  lookupCiv7CivMeta,
+  lookupCiv7LeaderMeta,
+} from '../../data/civ7-data.js';
+import type {
+  Civ6DraftResult,
+  Civ7DraftResult,
+  DraftGameType,
+} from '../../types/draft.js';
 
 const EMOJI_NAME_SAFE_RE = /[^A-Za-z0-9_]/g;
 
@@ -19,14 +19,23 @@ function sanitizeEmojiName(name: string): string {
   return trimmed.length >= 2 ? trimmed.slice(0, 32) : 'civ';
 }
 
-function renderEmoji(
-  meta: Readonly<{ gameId: string; emojiId?: string }>,
-  has?: HasEmoji
-): string {
-  const id = meta.emojiId?.trim();
-  if (!id) return '';
-  if (has && !has(id)) return '';
-  return `<:${sanitizeEmojiName(meta.gameId)}:${id}>`;
+function titleCaseWord(w: string): string {
+  if (!w) return w;
+  if (/^[IVX]+$/.test(w)) return w; // roman numerals
+  if (w.length <= 3 && w === w.toUpperCase()) return w;
+  return w[0].toUpperCase() + w.slice(1).toLowerCase();
+}
+
+function humanizeKey(key: string): string {
+  const stripped = key
+    .replace(/^LEADER_/, '')
+    .replace(/^CIVILIZATION_/, '')
+    .trim();
+  return stripped
+    .split('_')
+    .filter(Boolean)
+    .map(titleCaseWord)
+    .join(' ');
 }
 
 function labelForGroup(kind: 'Player' | 'Team', idx: number): string {
@@ -36,10 +45,10 @@ function labelForGroup(kind: 'Player' | 'Team', idx: number): string {
 function formatHeader(args: Readonly<{
   game: 'civ6' | 'civ7';
   gameType: DraftGameType;
-  startingAge?: AgePool;
   allocationNote?: string;
   leadersPerGroup: number;
   civsPerGroup?: number;
+  startingAge?: string;
 }>): string {
   const parts: string[] = [];
   if (args.game === 'civ6') {
@@ -49,32 +58,22 @@ function formatHeader(args: Readonly<{
     parts.push(
       `Game: **civ7** • Type: **${args.gameType}** • Age: **${args.startingAge ?? '—'}**`
     );
-    parts.push(
-      `Leaders/Civs: **${args.leadersPerGroup}** each`
-    );
+    parts.push(`Leaders: **${args.leadersPerGroup}** each • Civs: **${args.civsPerGroup ?? 0}** each`);
   }
   if (args.allocationNote) parts.push(`Note: ${args.allocationNote}`);
   return parts.join('\n');
 }
 
-function line(
-  meta: Readonly<{ gameId: string; emojiId?: string }>,
-  has?: HasEmoji
-): string {
-  const e = renderEmoji(meta, has);
-  return e ? `${e} ${meta.gameId}` : meta.gameId;
-}
-
-function metaOrUnknown<T extends LeaderMeta | CivMeta>(
-  meta: T | undefined
-): Readonly<{ gameId: string; emojiId?: string }> {
-  if (meta) return { gameId: meta.gameId, emojiId: meta.emojiId };
-  return { gameId: 'Unknown' };
+function renderLine(meta: Readonly<{ gameId: string; emojiId?: string }> | undefined, fallbackKey: string): string {
+  if (!meta) return humanizeKey(fallbackKey);
+  const name = meta.gameId;
+  const emojiId = meta.emojiId?.trim();
+  if (!emojiId) return name;
+  return `<:${sanitizeEmojiName(meta.gameId)}:${emojiId}> ${name}`;
 }
 
 export function buildCiv6DraftEmbed(
-  draft: Civ6DraftResult,
-  opts: BuildDraftEmbedOpts = {}
+  draft: Civ6DraftResult
 ): EmbedBuilder {
   const header = formatHeader({
     game: 'civ6',
@@ -88,8 +87,7 @@ export function buildCiv6DraftEmbed(
     lines.push('');
     lines.push(`**${labelForGroup(draft.allocation.groupKind, i)}**`);
     for (const k of draft.groups[i].leaders) {
-      const meta = metaOrUnknown(lookupCiv6LeaderMeta(k));
-      lines.push(line(meta, opts.hasEmojiId));
+      lines.push(renderLine(lookupCiv6LeaderMeta(k), k));
     }
   }
 
@@ -100,8 +98,7 @@ export function buildCiv6DraftEmbed(
 }
 
 export function buildCiv7DraftEmbed(
-  draft: Civ7DraftResult,
-  opts: BuildDraftEmbedOpts = {}
+  draft: Civ7DraftResult
 ): EmbedBuilder {
   const header = formatHeader({
     game: 'civ7',
@@ -118,16 +115,14 @@ export function buildCiv7DraftEmbed(
     const g = draft.groups[i];
     lines.push('');
     lines.push(`**${labelForGroup(draft.allocation.groupKind, i)}**`);
-    lines.push('**Leaders**');
+    lines.push('**.Leaders**');
     for (const k of g.leaders) {
-      const meta = metaOrUnknown(lookupCiv7LeaderMeta(k));
-      lines.push(line(meta, opts.hasEmojiId));
+      lines.push(renderLine(lookupCiv7LeaderMeta(k), k));
     }
     lines.push('');
-    lines.push('**Civs**');
+    lines.push('**.Civs**');
     for (const k of g.civs ?? []) {
-      const meta = metaOrUnknown(lookupCiv7CivMeta(k));
-      lines.push(line(meta, opts.hasEmojiId));
+      lines.push(renderLine(lookupCiv7CivMeta(k), k));
     }
   }
 
