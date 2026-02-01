@@ -47,7 +47,8 @@ const LEADER_TYPES: readonly LeaderType[] = [
 
 type Civ6LeaderKey = keyof typeof CIV6_LEADERS;
 
-const EMOJI_MENTION_RE = /^<a?:[^:>]{2,32}:(\d{15,22})>$/;
+// Capture both emoji name + id so we can resolve bans by name (server emoji ids won't match app ids).
+const EMOJI_MENTION_RE = /^<a?:([A-Za-z0-9_]{2,32}):(\d{15,22})>$/;
 const SNOWFLAKE_RE = /^\d{15,22}$/;
 
 function shuffle<T>(arr: T[]): void {
@@ -116,11 +117,19 @@ function resolveBanKeys(
 
   for (const raw of tokens) {
     const token = normalizeToken(raw);
-    const m = EMOJI_MENTION_RE.exec(token);
-    const id = m?.[1] ?? (SNOWFLAKE_RE.test(token) ? token : null);
-    const key = (id ? index.get(id) : undefined) ?? index.get(token.toLowerCase());
+
+    // Prefer resolving custom emoji mentions by *name* (mapped to gameId), since IDs can differ.
+    const mention = EMOJI_MENTION_RE.exec(token);
+    const mentionName = mention?.[1];
+    const mentionId = mention?.[2];
+
+    const key =
+      (mentionName ? index.get(mentionName.toLowerCase()) : undefined) ??
+      (mentionId ? index.get(mentionId) : undefined) ??
+      (SNOWFLAKE_RE.test(token) ? index.get(token) : undefined) ??
+      index.get(token.toLowerCase());
     if (!key) {
-      unknown.push(token);
+      unknown.push(mentionName ? `:${mentionName}:` : token);
       continue;
     }
     banned.add(key);
@@ -350,8 +359,6 @@ export function generateCiv6Draft(req: Civ6DraftRequest): Civ6DraftResult {
   const leaderIndex = buildLeaderBanIndex(CIV6_LEADERS);
   const banned = resolveBanKeys(tokenizeBans(req.leaderBansRaw), leaderIndex, 'leader');
 
-  const bannedLeadersList = [...banned].sort();
-
   const allLeaderKeys = Object.keys(CIV6_LEADERS) as Civ6LeaderKey[];
   const available = allLeaderKeys.filter((k) => !banned.has(k));
 
@@ -371,7 +378,7 @@ export function generateCiv6Draft(req: Civ6DraftRequest): Civ6DraftResult {
   return {
     gameVersion: 'civ6',
     gameType: req.gameType,
-    allocation: { groupKind, groupCount, leadersPerGroup, note, bannedLeaders: bannedLeadersList.length ? bannedLeadersList : undefined },
+    allocation: { groupKind, groupCount, leadersPerGroup, note },
     groups,
   };
 }
@@ -393,9 +400,6 @@ export function generateCiv7Draft(req: Civ7DraftRequest): Civ7DraftResult {
     'leader'
   );
   const bannedCivs = resolveBanKeys(tokenizeBans(req.civBansRaw), civIndex, 'civ');
-
-  const bannedLeadersList = [...bannedLeaders].sort();
-  const bannedCivsList = [...bannedCivs].sort();
 
   const allLeaderKeys = Object.keys(CIV7_LEADERS);
   const leaderPool = allLeaderKeys.filter((k) => !bannedLeaders.has(k));
@@ -463,8 +467,6 @@ export function generateCiv7Draft(req: Civ7DraftRequest): Civ7DraftResult {
       leadersPerGroup: leaderSizing.leadersPerGroup,
       civsPerGroup,
       note: allocationNote,
-      bannedLeaders: bannedLeadersList.length ? bannedLeadersList : undefined,
-      bannedCivs: bannedCivsList.length ? bannedCivsList : undefined,
     },
     groups,
   };
